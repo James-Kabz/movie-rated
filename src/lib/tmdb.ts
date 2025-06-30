@@ -1,5 +1,5 @@
 const TMDB_BASE_URL = "https://api.themoviedb.org/3"
-const TMDB_API_KEY = process.env.TMDB_API_KEY
+const TMDB_ACCESS_TOKEN = process.env.TMDB_API_KEY // This will be your read access token
 
 export interface Movie {
   id: number
@@ -51,8 +51,15 @@ export interface Credits {
 
 class TMDBService {
   private async fetchFromTMDB(endpoint: string) {
-    const response = await fetch(`${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`)
+    const response = await fetch(`${TMDB_BASE_URL}${endpoint}`, {
+      headers: {
+        Authorization: `Bearer ${TMDB_ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    })
+
     if (!response.ok) {
+      console.error(`TMDB API error: ${response.status} ${response.statusText}`)
       throw new Error(`TMDB API error: ${response.statusText}`)
     }
     return response.json()
