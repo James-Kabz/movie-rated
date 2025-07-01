@@ -17,18 +17,6 @@ export function Providers({ children, session }: { children: React.ReactNode; se
         storageKey="movie-tracker-theme"
       >
         <HeroUIProvider>
-          <ToastProvider
-            toastProps={{
-              radius: "full",
-              color: "primary",
-              variant: "flat",
-              timeout: 1000,
-              hideIcon: true,
-              classNames: {
-                closeButton: "opacity-100 absolute right-4 top-1/2 -translate-y-1/2",
-              },
-            }}
-          />
           {children}
         </HeroUIProvider>
       </NextThemesProvider>

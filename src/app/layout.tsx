@@ -6,6 +6,8 @@ import { Providers } from "./providers"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { Navigation } from "@/components/navigation"
+import { ToastProvider } from "@heroui/toast"
+import { Toaster } from "sonner"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,7 +59,14 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers session={session}>
           <Navigation />
-          <main>{children}</main>
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton
+            toastOptions={{
+              duration: 2000,
+            }} />
+          <main className="light text-foreground bg-background">{children}</main>
         </Providers>
       </body>
     </html>
