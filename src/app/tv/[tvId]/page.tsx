@@ -71,7 +71,11 @@ export default function TVShowDetailPage() {
       const response = await fetch("/api/watchlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ movieId: tvId, sendEmail }),
+        body: JSON.stringify({
+          movieId: tvId,
+          mediaType: "tv",
+          sendEmail,
+        }),
       })
 
       if (response.ok) {
@@ -93,7 +97,7 @@ export default function TVShowDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="relative mb-8">
             <div className="absolute inset-0 z-0 rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
             <div className="relative z-10 flex flex-col md:flex-row gap-8 py-8">
@@ -130,8 +134,8 @@ export default function TVShowDetailPage() {
 
   if (error || !tvData?.tv) {
     return (
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card className="mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card className="max-w-md mx-auto">
           <CardBody className="text-center py-8">
             <h1 className="text-2xl font-bold text-foreground mb-4">{error || "TV show not found"}</h1>
             <Button color="primary" onClick={fetchTVData} className="mt-4">
@@ -149,7 +153,7 @@ export default function TVShowDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="relative mb-8">
           {tv?.backdrop_path && (
             <div className="absolute inset-0 z-0 rounded-xl overflow-hidden">
@@ -284,9 +288,9 @@ export default function TVShowDetailPage() {
               {recommendations.results.slice(0, 10).map((show: any) => (
                 <MovieCard
                   key={show.id}
-                  movie={show}
+                  movie={{ ...show, media_type: "tv" }}
                   isInWatchlist={watchlist.includes(show.id)}
-                  onAddToWatchlist={handleAddToWatchlist}
+                  onAddToWatchlist={(id, email) => handleAddToWatchlist(id, email)}
                 />
               ))}
             </div>

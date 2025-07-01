@@ -62,6 +62,7 @@ export default function WatchlistPage() {
 
             if (response.ok) {
                 setWatchlist(watchlist.filter((item) => item.id !== itemId))
+                toast.success("Removed from watchlist!")
             }
         } catch (error) {
             console.error("Error removing from watchlist:", error)

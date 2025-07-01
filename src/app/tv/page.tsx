@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { MovieCard } from "@/components/movie-card"
-import { Button, Tabs, Tab, Pagination, Skeleton, Card, CardBody } from "@heroui/react"
+import { Button, Tabs, Tab, Pagination, Skeleton } from "@heroui/react"
 import { toast } from "sonner"
 import type { Movie } from "@/lib/tmdb"
 import { useSession } from "next-auth/react"
@@ -122,6 +122,33 @@ export default function TVShowsPage() {
 
   const currentCategoryInfo = categories.find((cat) => cat.key === activeCategory)
 
+  // Render skeleton cards while loading
+  const renderSkeletonCards = () => (
+    <>
+      {[...Array(20)].map((_, i) => (
+        <div key={`skeleton-${i}`} className="bg-gray-700 rounded-lg overflow-hidden">
+          <div className="relative">
+            <Skeleton className="w-full h-64 rounded-none" />
+          </div>
+          <div className="p-4">
+            <Skeleton className="h-6 w-3/4 rounded-lg mb-2" />
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-1">
+                <Skeleton className="h-4 w-20 rounded-lg" />
+              </div>
+              <Skeleton className="h-6 w-12 rounded-full" />
+            </div>
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-full rounded-lg" />
+              <Skeleton className="h-4 w-5/6 rounded-lg" />
+              <Skeleton className="h-4 w-4/6 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  )
+
   if (error) {
     return (
       <div className="min-h-screen bg-background">
@@ -129,46 +156,9 @@ export default function TVShowsPage() {
           <div className="text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">Something went wrong</h2>
             <p className="text-default-600 mb-6">{error}</p>
-            <Button color="primary" onClickCapture={() => fetchShows(activeCategory, currentPage)}>
+            <Button color="primary" onClick={() => fetchShows(activeCategory, currentPage)}>
               Try Again
             </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <Skeleton className="h-10 w-1/4 rounded-lg mb-2" />
-            <Skeleton className="h-6 w-1/2 rounded-lg" />
-          </div>
-          <div className="mb-8 flex gap-6">
-            {categories.map((_, i) => (
-              <Skeleton key={i} className="h-12 w-24 rounded-lg" />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
-            {[...Array(20)].map((_, i) => (
-              <Card key={i} className="h-full">
-                <CardBody className="p-0">
-                  <Skeleton className="rounded-lg w-full aspect-[2/3]" />
-                  <div className="p-3">
-                    <Skeleton className="h-5 w-3/4 rounded-lg mb-2" />
-                    <div className="flex justify-between items-center">
-                      <Skeleton className="h-4 w-16 rounded-lg" />
-                      <Skeleton className="h-4 w-10 rounded-lg" />
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-          <div className="flex justify-center">
-            <Skeleton className="h-10 w-64 rounded-lg" />
           </div>
         </div>
       </div>
@@ -178,45 +168,68 @@ export default function TVShowsPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">TV Shows</h1>
-          <p className="text-default-600 text-lg">{currentCategoryInfo?.description}</p>
-          {totalResults > 0 && (
-            <p className="text-sm text-default-500 mt-2">
-              Showing page {currentPage} of {totalPages} ({totalResults.toLocaleString()} total results)
-            </p>
+          {loading ? (
+            <>
+              <Skeleton className="h-10 w-1/4 rounded-lg mb-2" />
+              <Skeleton className="h-6 w-1/2 rounded-lg" />
+            </>
+          ) : (
+            <>
+              <h1 className="text-4xl font-bold text-foreground mb-2">TV Shows</h1>
+              <p className="text-default-600 text-lg">{currentCategoryInfo?.description}</p>
+              {totalResults > 0 && (
+                <p className="text-sm text-default-500 mt-2">
+                  Showing page {currentPage} of {totalPages} ({totalResults.toLocaleString()} total results)
+                </p>
+              )}
+            </>
           )}
         </div>
 
+        {/* Category Tabs */}
         <div className="mb-8">
-          <Tabs
-            selectedKey={activeCategory}
-            onSelectionChange={(key) => handleCategoryChange(key as string)}
-            variant="underlined"
-            classNames={{
-              tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-              cursor: "w-full bg-primary",
-              tab: "max-w-fit px-0 h-12",
-            }}
-          >
-            {categories.map((category) => (
-              <Tab key={category.key} title={category.label} />
-            ))}
-          </Tabs>
+          {loading ? (
+            <div className="flex gap-6 border-b border-divider pb-3">
+              {categories.map((_, i) => (
+                <Skeleton key={i} className="h-8 w-20 rounded-lg" />
+              ))}
+            </div>
+          ) : (
+            <Tabs
+              selectedKey={activeCategory}
+              onSelectionChange={(key) => handleCategoryChange(key as string)}
+              variant="underlined"
+              classNames={{
+                tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                cursor: "w-full bg-primary",
+                tab: "max-w-fit px-0 h-12",
+              }}
+            >
+              {categories.map((category) => (
+                <Tab key={category.key} title={category.label} />
+              ))}
+            </Tabs>
+          )}
         </div>
 
+        {/* TV Shows Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
-          {shows.map((show) => (
-            <MovieCard
-              key={show.id}
-              movie={{ ...show, media_type: "tv" }}
-              isInWatchlist={watchlist.includes(show.id)}
-              onAddToWatchlist={handleAddToWatchlist}
-            />
-          ))}
+          {loading
+            ? renderSkeletonCards()
+            : shows.map((show) => (
+                <MovieCard
+                  key={show.id}
+                  movie={{ ...show, media_type: "tv" }}
+                  isInWatchlist={watchlist.includes(show.id)}
+                  onAddToWatchlist={handleAddToWatchlist}
+                />
+              ))}
         </div>
 
-        {totalPages > 1 && (
+        {/* Pagination */}
+        {totalPages > 1 && !loading && (
           <div className="flex flex-col items-center gap-4">
             <Pagination
               total={totalPages}
