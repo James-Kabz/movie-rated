@@ -17,7 +17,7 @@ interface MovieData {
 }
 
 export default function MovieDetailPage() {
-    const params = useParams()
+    const { movieId } = useParams()
     const { data: session } = useSession()
     const [movieData, setMovieData] = useState<MovieData | null>(null)
     const [watchlist, setWatchlist] = useState<number[]>([])
@@ -25,36 +25,49 @@ export default function MovieDetailPage() {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        if (params.id) {
+        if (movieId) {
             fetchMovieData()
         }
         if (session) {
             fetchWatchlist()
         }
-    }, [params.id, session])
+    }, [movieId, session])
 
     const fetchMovieData = async () => {
         try {
-            setLoading(true)
-            setError(null)
-            const response = await fetch(`/api/movies/${params.id}`)
+            setLoading(true);
+            setError(null);
+            const response = await fetch(`/api/movies/${movieId}`);
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`)
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json()
-            setMovieData(data)
+            const data = await response.json();
+
+            // Check if the data structure matches what we expect
+            if (!data.movie && !data.movieDetails) {
+                throw new Error("Invalid movie data structure");
+            }
+
+            // Normalize the data structure
+            const normalizedData = {
+                movie: data.movie || data.movieDetails,
+                credits: data.credits,
+                recommendations: data.recommendations
+            };
+
+            setMovieData(normalizedData);
         } catch (error) {
-            console.error("Error fetching movie data:", error)
-            setError("Failed to load movie details. Please try again later.")
+            console.error("Error fetching movie data:", error);
+            setError("Failed to load movie details. Please try again later.");
             toast.error("Error fetching movie details", {
                 description: error instanceof Error ? error.message : "Failed to fetch movie details.",
-            })
+            });
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     const fetchWatchlist = async () => {
         try {
@@ -99,33 +112,92 @@ export default function MovieDetailPage() {
 
     if (loading) {
         return (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex flex-col md:flex-row gap-8 py-8">
-                    <div className="flex-shrink-0">
-                        <Skeleton className="rounded-lg">
-                            <div className="h-[450px] w-[300px] rounded-lg bg-default-300"></div>
-                        </Skeleton>
+            <div className="min-h-screen bg-background">
+                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {/* Hero Section Skeleton */}
+                    <div className="relative mb-8">
+                        {/* Backdrop Skeleton */}
+                        <div className="absolute inset-0 z-0 rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+
+                        <div className="relative z-10 flex flex-col md:flex-row gap-8 py-8">
+                            {/* Poster Skeleton */}
+                            <div className="flex-shrink-0">
+                                <Skeleton className="rounded-lg w-[300px] h-[450px]" />
+                            </div>
+
+                            {/* Content Skeleton */}
+                            <div className="flex-1 space-y-4">
+                                <Skeleton className="h-10 w-3/4 rounded-lg" />
+                                <Skeleton className="h-6 w-1/2 rounded-lg" />
+
+                                {/* Ratings/Info Skeleton */}
+                                <div className="flex items-center space-x-6">
+                                    <Skeleton className="h-5 w-24 rounded-lg" />
+                                    <Skeleton className="h-5 w-20 rounded-lg" />
+                                    <Skeleton className="h-5 w-16 rounded-lg" />
+                                </div>
+
+                                {/* Genres Skeleton */}
+                                <div className="flex flex-wrap gap-2">
+                                    <Skeleton className="h-6 w-16 rounded-full" />
+                                    <Skeleton className="h-6 w-20 rounded-full" />
+                                    <Skeleton className="h-6 w-14 rounded-full" />
+                                </div>
+
+                                {/* Overview Skeleton */}
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-full rounded-lg" />
+                                    <Skeleton className="h-4 w-5/6 rounded-lg" />
+                                    <Skeleton className="h-4 w-4/6 rounded-lg" />
+                                    <Skeleton className="h-4 w-3/6 rounded-lg" />
+                                </div>
+
+                                {/* Director Skeleton */}
+                                <Skeleton className="h-4 w-1/3 rounded-lg" />
+
+                                {/* Buttons Skeleton */}
+                                <div className="pt-4 flex gap-3">
+                                    <Skeleton className="h-10 w-32 rounded-lg" />
+                                    <Skeleton className="h-10 w-36 rounded-lg" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex-1 space-y-4">
-                        <Skeleton className="w-3/4 rounded-lg">
-                            <div className="h-8 w-3/4 rounded-lg bg-default-200"></div>
-                        </Skeleton>
-                        <Skeleton className="w-full rounded-lg">
-                            <div className="h-4 w-full rounded-lg bg-default-200"></div>
-                        </Skeleton>
-                        <Skeleton className="w-2/3 rounded-lg">
-                            <div className="h-4 w-2/3 rounded-lg bg-default-300"></div>
-                        </Skeleton>
+
+                    {/* Cast Section Skeleton */}
+                    <div className="mb-12">
+                        <Skeleton className="h-8 w-32 rounded-lg mb-6" />
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                            {[...Array(8)].map((_, i) => (
+                                <Card key={i} className="text-center">
+                                    <CardBody className="p-3">
+                                        <Skeleton className="rounded-lg w-full h-32 mb-2" />
+                                        <Skeleton className="h-4 w-3/4 rounded-lg mx-auto mb-1" />
+                                        <Skeleton className="h-3 w-1/2 rounded-lg mx-auto" />
+                                    </CardBody>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Recommendations Skeleton */}
+                    <div>
+                        <Skeleton className="h-8 w-48 rounded-lg mb-6" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                            {[...Array(5)].map((_, i) => (
+                                <Skeleton key={i} className="rounded-lg h-96" />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
-        )
+        );
     }
 
     if (error || !movieData?.movie) {
         return (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <Card className="max-w-md mx-auto">
+            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <Card className=" mx-auto">
                     <CardBody className="text-center py-8">
                         <h1 className="text-2xl font-bold text-foreground mb-4">{error || "Movie not found"}</h1>
                         <Button color="primary" onClick={fetchMovieData} className="mt-4">
@@ -143,7 +215,7 @@ export default function MovieDetailPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Hero Section */}
                 <div className="relative mb-8">
                     {movie?.backdrop_path && (

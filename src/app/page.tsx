@@ -86,7 +86,7 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="">
-        <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {[...Array(20)].map((_, i) => (
               <div key={i} className="bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg h-96"></div>

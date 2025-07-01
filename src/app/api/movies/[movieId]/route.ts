@@ -1,33 +1,28 @@
-import { tmdbService } from "@/lib/tmdb"
-import { type NextRequest, NextResponse } from "next/server"
+import { tmdbService } from "@/lib/tmdb";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const { id } = await params
+export async function GET (request: NextRequest, {params} : {params: Promise<{movieId: string}>}) {
+    try {
+        const { movieId }= await params
 
-    if (!id) {
-      return NextResponse.json({ error: "Movie ID is required" }, { status: 400 })
+        if (!movieId) {
+            return new Response("Movie ID is required", { status: 400 })
+        }
+
+        const [movieDetails, credits, recommendations] = await Promise.all([
+            tmdbService.getMovieDetails(Number.parseInt(movieId)),
+            tmdbService.getMovieCredits(Number.parseInt(movieId)),
+            tmdbService.getMovieRecommendations(Number.parseInt(movieId))
+        ]);
+
+        return NextResponse.json({
+            movieDetails,
+            credits,
+            recommendations
+        });
+    } catch (error) {
+        console.error(error);
+        return new Response("Failed to fetch movie details", { status: 500 })
     }
 
-    const movieId = Number.parseInt(id)
-
-    if (isNaN(movieId)) {
-      return NextResponse.json({ error: "Invalid movie ID" }, { status: 400 })
-    }
-
-    const [movie, credits, recommendations] = await Promise.all([
-      tmdbService.getMovieDetails(movieId),
-      tmdbService.getMovieCredits(movieId),
-      tmdbService.getMovieRecommendations(movieId),
-    ])
-
-    return NextResponse.json({
-      movie,
-      credits,
-      recommendations,
-    })
-  } catch (error) {
-    console.error("Error fetching movie details:", error)
-    return NextResponse.json({ error: "Failed to fetch movie details" }, { status: 500 })
-  }
 }
