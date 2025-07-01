@@ -39,6 +39,7 @@ export function Navigation() {
 
   const navigation = [
     { name: "Home", href: "/", current: false },
+    { name: "Search Movies", href: "/search", current: false },
     { name: "Movies", href: "/movies", current: false },
     { name: "Top Rated", href: "/movies?category=top_rated", current: false },
     { name: "Now Playing", href: "/movies?category=now_playing", current: false },
@@ -47,7 +48,7 @@ export function Navigation() {
   if (!mounted) {
     return (
       <Disclosure as="nav" className="nav-bg">
-        <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+        <div className="mx-auto px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">
             <div className="flex flex-shrink-0 items-center">
               <Link href="/" className="text-xl font-bold text-blue-600">
@@ -84,7 +85,7 @@ export function Navigation() {
                   </Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:block">
-                  <div className="flex space-x-4">
+                  <div className="flex space-x-10">
                     {navigation.map((item) => (
                       <Link
                         key={item.name}
