@@ -58,32 +58,36 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className="bg-gray-200 animate-pulse rounded-lg h-96"></div>
-          ))}
+      <div className="">
+        <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {[...Array(20)].map((_, i) => (
+              <div key={i} className="bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg h-96"></div>
+            ))}
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Popular Movies</h1>
-        <p className="text-gray-600">Discover the most popular movies right now</p>
-      </div>
+    <div className="">
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Popular Movies</h1>
+          <p className="">Discover the most popular movies right now</p>
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {movies.map((movie) => (
-          <MovieCard
-            key={movie.id}
-            movie={movie}
-            isInWatchlist={watchlist.includes(movie.id)}
-            onAddToWatchlist={handleAddToWatchlist}
-          />
-        ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {movies.map((movie) => (
+            <MovieCard
+              key={movie.id}
+              movie={movie}
+              isInWatchlist={watchlist.includes(movie.id)}
+              onAddToWatchlist={handleAddToWatchlist}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )

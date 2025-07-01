@@ -1,14 +1,14 @@
 "use client"
 
 import type React from "react"
-
 import { Fragment } from "react"
 import { Disclosure, Menu, Transition } from "@headlessui/react"
-import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
+import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, SunIcon, MoonIcon } from "@heroicons/react/24/outline"
 import { useSession, signIn, signOut } from "next-auth/react"
+import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 function classNames(...classes: string[]) {
@@ -19,12 +19,22 @@ export function Navigation() {
   const { data: session } = useSession()
   const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
     }
+  }
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark")
   }
 
   const navigation = [
@@ -34,14 +44,30 @@ export function Navigation() {
     { name: "Now Playing", href: "/movies?category=now_playing", current: false },
   ]
 
+  if (!mounted) {
+    return (
+      <Disclosure as="nav" className="nav-bg">
+        <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+          <div className="relative flex h-16 items-center justify-between">
+            <div className="flex flex-shrink-0 items-center">
+              <Link href="/" className="text-xl font-bold text-blue-600">
+                MovieTracker
+              </Link>
+            </div>
+          </div>
+        </div>
+      </Disclosure>
+    )
+  }
+
   return (
-    <Disclosure as="nav" className="bg-white shadow">
+    <Disclosure as="nav" className="nav-bg">
       {({ open }) => (
         <>
-          <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+          <div className="mx-auto px-2 sm:px-6 lg:px-8">
             <div className="relative flex h-16 items-center justify-between">
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-                <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                   <span className="absolute -inset-0.5" />
                   <span className="sr-only">Open main menu</span>
                   {open ? (
@@ -53,7 +79,7 @@ export function Navigation() {
               </div>
               <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex flex-shrink-0 items-center">
-                  <Link href="/" className="text-xl font-bold text-indigo-600">
+                  <Link href="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
                     MovieTracker
                   </Link>
                 </div>
@@ -65,9 +91,9 @@ export function Navigation() {
                         href={item.href}
                         className={classNames(
                           item.current
-                            ? "bg-gray-900 text-white"
-                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
-                          "rounded-md px-3 py-2 text-sm font-medium",
+                            ? "bg-gray-900 dark:bg-gray-700"
+                            : " hover:bg-gray-500 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white",
+                          "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                         )}
                         aria-current={item.current ? "page" : undefined}
                       >
@@ -78,15 +104,14 @@ export function Navigation() {
                 </div>
               </div>
 
-              {/* Search Bar */}
               <div className="flex-1 flex justify-center px-2 lg:ml-6 lg:justify-end">
                 <div className="max-w-lg w-full lg:max-w-xs">
                   <form onSubmit={handleSearch} className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                      <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" aria-hidden="true" />
                     </div>
                     <input
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      className="search-input block w-full pl-10 pr-3 py-2 border rounded-md leading-5 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
                       placeholder="Search movies..."
                       type="search"
                       value={searchQuery}
@@ -97,11 +122,23 @@ export function Navigation() {
               </div>
 
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-full text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2 transition-colors duration-200"
+                  aria-label="Toggle theme"
+                >
+                  {theme === "dark" ? (
+                    <SunIcon className="h-5 w-5" aria-hidden="true" />
+                  ) : (
+                    <MoonIcon className="h-5 w-5" aria-hidden="true" />
+                  )}
+                </button>
+
                 {session ? (
                   <>
                     <Link
                       href="/watchlist"
-                      className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                      className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
                     >
                       My Watchlist
                     </Link>
@@ -128,14 +165,14 @@ export function Navigation() {
                         leaveFrom="transform opacity-100 scale-100"
                         leaveTo="transform opacity-0 scale-95"
                       >
-                        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-700 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                           <Menu.Item>
                             {({ active }) => (
                               <Link
                                 href="/profile"
                                 className={classNames(
-                                  active ? "bg-gray-100" : "",
-                                  "block px-4 py-2 text-sm text-gray-700",
+                                  active ? "bg-gray-100 dark:bg-gray-600" : "",
+                                  "block px-4 py-2 text-sm text-gray-700 dark:text-gray-200",
                                 )}
                               >
                                 Your Profile
@@ -147,8 +184,8 @@ export function Navigation() {
                               <button
                                 onClick={() => signOut()}
                                 className={classNames(
-                                  active ? "bg-gray-100" : "",
-                                  "block w-full text-left px-4 py-2 text-sm text-gray-700",
+                                  active ? "bg-gray-100 dark:bg-gray-600" : "",
+                                  "block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200",
                                 )}
                               >
                                 Sign out
@@ -162,7 +199,7 @@ export function Navigation() {
                 ) : (
                   <button
                     onClick={() => signIn("google")}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    className="btn-primary px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
                   >
                     Sign In
                   </button>
@@ -179,14 +216,59 @@ export function Navigation() {
                   as={Link}
                   href={item.href}
                   className={classNames(
-                    item.current ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
-                    "block rounded-md px-3 py-2 text-base font-medium",
+                    item.current
+                      ? "bg-gray-900 dark:bg-gray-700"
+                      : "hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white",
+                    "block rounded-md px-3 py-2 text-base font-medium transition-colors duration-200",
                   )}
                   aria-current={item.current ? "page" : undefined}
                 >
                   {item.name}
                 </Disclosure.Button>
               ))}
+
+              <Disclosure.Button
+                as="button"
+                onClick={toggleTheme}
+                className="w-full flex items-center text-left rounded-md px-3 py-2 text-base font-medium hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
+              >
+                {theme === "dark" ? (
+                  <>
+                    <SunIcon className="h-5 w-5 mr-2" aria-hidden="true" />
+                    Light Mode
+                  </>
+                ) : (
+                  <>
+                    <MoonIcon className="h-5 w-5 mr-2" aria-hidden="true" />
+                    Dark Mode
+                  </>
+                )}
+              </Disclosure.Button>
+
+              <div className="px-3 py-2">
+                <form onSubmit={handleSearch} className="relative nav-search">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+                  </div>
+                  <input
+                    className="search-input block w-full pl-10 pr-3 py-2 border rounded-md leading-5 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Search movies..."
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </form>
+              </div>
+
+              {session && (
+                <Disclosure.Button
+                  as={Link}
+                  href="/watchlist"
+                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
+                >
+                  My Watchlist
+                </Disclosure.Button>
+              )}
             </div>
           </Disclosure.Panel>
         </>
