@@ -34,7 +34,7 @@
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "prisma": "^6.10.1",
+    "prisma": "^6.11.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
     "typescript": "^5"
