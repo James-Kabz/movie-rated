@@ -126,7 +126,7 @@ export function SearchSuggestions({ query, onSelect, isVisible }: SearchSuggesti
               {suggestions.map((suggestion) => (
                 <button
                   key={`${suggestion.media_type}-${suggestion.id}`}
-                  onPress={() => handleSuggestionPress(suggestion)}
+                  onClick={() => handleSuggestionPress(suggestion)}
                   className="w-full flex items-center gap-3 p-3 hover:bg-default-100 transition-colors text-left"
                 >
                   <Image
@@ -163,7 +163,7 @@ export function SearchSuggestions({ query, onSelect, isVisible }: SearchSuggesti
 
               {query.trim() && (
                 <button
-                  onPress={() => {
+                  onClick={() => {
                     onSelect()
                     router.push(`/search?q=${encodeURIComponent(query.trim())}`)
                   }}
