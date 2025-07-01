@@ -157,19 +157,19 @@ export function MovieCard({ movie, isInWatchlist = false, onAddToWatchlist, onRe
               </button>
             ) : (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 space-y-2">
-                <button
+                {/* <button
                   onClick={() => handleWatchlistAction(true)}
                   disabled={isLoading}
                   className="w-full text-xs btn-primary px-3 py-1 rounded"
                 >
                   Add + Email
-                </button>
+                </button> */}
                 <button
                   onClick={() => handleWatchlistAction(false)}
                   disabled={isLoading}
-                  className="w-full text-xs bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded"
+                  className="w-full text-xs btn-primary px-3 py-1 rounded"
                 >
-                  Add Only
+                  Add To Watchlist
                 </button>
                 <button
                   onClick={() => setShowEmailOption(false)}
