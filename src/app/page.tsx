@@ -99,7 +99,7 @@ export default function HomePage() {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-foreground mb-4">Something went wrong</h2>
           <p className="text-default-600 mb-6">{error}</p>

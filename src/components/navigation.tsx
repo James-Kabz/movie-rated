@@ -1,15 +1,16 @@
 "use client"
 
 import type React from "react"
-import { Fragment } from "react"
+import { Fragment, useRef, useEffect } from "react"
 import { Disclosure, Menu, Transition } from "@headlessui/react"
 import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, SunIcon, MoonIcon } from "@heroicons/react/24/outline"
 import { useSession, signIn, signOut } from "next-auth/react"
 import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { SearchSuggestions } from "./search-suggestions"
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ")
@@ -18,19 +19,50 @@ function classNames(...classes: string[]) {
 export function Navigation() {
   const { data: session } = useSession()
   const [searchQuery, setSearchQuery] = useState("")
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const router = useRouter()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
+      setShowSuggestions(false)
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
     }
+  }
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchQuery(value)
+    setShowSuggestions(value.trim().length >= 2)
+  }
+
+  const handleSearchFocus = () => {
+    if (searchQuery.trim().length >= 2) {
+      setShowSuggestions(true)
+    }
+  }
+
+  const closeSuggestions = () => {
+    setShowSuggestions(false)
   }
 
   const toggleTheme = () => {
@@ -39,8 +71,8 @@ export function Navigation() {
 
   const navigation = [
     { name: "Home", href: "/", current: false },
-    { name: "Search Movies", href: "/search", current: false },
     { name: "Movies", href: "/movies", current: false },
+    { name: "TV Shows", href: "/tv", current: false },
     { name: "Top Rated", href: "/movies?category=top_rated", current: false },
     { name: "Now Playing", href: "/movies?category=now_playing", current: false },
   ]
@@ -78,6 +110,7 @@ export function Navigation() {
                   )}
                 </Disclosure.Button>
               </div>
+
               <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex flex-shrink-0 items-center">
                   <Link href="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
@@ -85,7 +118,7 @@ export function Navigation() {
                   </Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:block">
-                  <div className="flex space-x-10">
+                  <div className="flex space-x-4">
                     {navigation.map((item) => (
                       <Link
                         key={item.name}
@@ -93,7 +126,7 @@ export function Navigation() {
                         className={classNames(
                           item.current
                             ? "bg-gray-900 dark:bg-gray-700"
-                            : " hover:bg-gray-500 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white",
+                            : "hover:bg-gray-500 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white",
                           "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                         )}
                         aria-current={item.current ? "page" : undefined}
@@ -105,20 +138,24 @@ export function Navigation() {
                 </div>
               </div>
 
+              {/* Enhanced Search */}
               <div className="flex-1 flex justify-center px-2 lg:ml-6 lg:justify-end">
-                <div className="max-w-lg w-full lg:max-w-xs">
+                <div className="max-w-lg w-full lg:max-w-xs relative" ref={searchRef}>
                   <form onSubmit={handleSearch} className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" aria-hidden="true" />
                     </div>
                     <input
                       className="search-input block w-full pl-10 pr-3 py-2 border rounded-md leading-5 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
-                      placeholder="Search movies..."
+                      placeholder="Search movies, TV shows, people..."
                       type="search"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={handleSearchInputChange}
+                      onFocus={handleSearchFocus}
                     />
                   </form>
+
+                  <SearchSuggestions query={searchQuery} onSelect={closeSuggestions} isVisible={showSuggestions} />
                 </div>
               </div>
 
@@ -253,7 +290,7 @@ export function Navigation() {
                   </div>
                   <input
                     className="search-input block w-full pl-10 pr-3 py-2 border rounded-md leading-5 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Search movies..."
+                    placeholder="Search movies, TV shows, people..."
                     type="search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}

@@ -8,10 +8,10 @@ import { toast } from "sonner"
 import type { Movie } from "@/lib/tmdb"
 import { useSession } from "next-auth/react"
 
-export default function MoviesPage() {
+export default function TVShowsPage() {
   const { data: session } = useSession()
   const searchParams = useSearchParams()
-  const [movies, setMovies] = useState<Movie[]>([])
+  const [shows, setShows] = useState<Movie[]>([])
   const [watchlist, setWatchlist] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -21,10 +21,8 @@ export default function MoviesPage() {
   const [activeCategory, setActiveCategory] = useState(searchParams.get("category") || "popular")
 
   const categories = [
-    { key: "popular", label: "Popular", description: "Most popular movies right now" },
-    { key: "top_rated", label: "Top Rated", description: "Highest rated movies of all time" },
-    { key: "now_playing", label: "Now Playing", description: "Currently playing in theaters" },
-    { key: "upcoming", label: "Upcoming", description: "Coming soon to theaters" },
+    { key: "popular", label: "Popular", description: "Most popular TV shows right now" },
+    { key: "top_rated", label: "Top Rated", description: "Highest rated TV shows of all time" },
   ]
 
   useEffect(() => {
@@ -32,7 +30,7 @@ export default function MoviesPage() {
     const page = Number.parseInt(searchParams.get("page") || "1")
     setActiveCategory(category)
     setCurrentPage(page)
-    fetchMovies(category, page)
+    fetchShows(category, page)
   }, [searchParams])
 
   useEffect(() => {
@@ -41,26 +39,26 @@ export default function MoviesPage() {
     }
   }, [session])
 
-  const fetchMovies = async (category: string, page: number) => {
+  const fetchShows = async (category: string, page: number) => {
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch(`/api/movies?category=${category}&page=${page}`)
+      const response = await fetch(`/api/movies?category=${category}&type=tv&page=${page}`)
 
       if (!response.ok) {
-        throw new Error("Failed to fetch movies")
+        throw new Error("Failed to fetch TV shows")
       }
 
       const data = await response.json()
-      setMovies(data.results || [])
-      setTotalPages(Math.min(data.total_pages || 1, 500)) // TMDB limits to 500 pages
+      setShows(data.results || [])
+      setTotalPages(Math.min(data.total_pages || 1, 500))
       setTotalResults(data.total_results || 0)
       setCurrentPage(page)
     } catch (error) {
-      console.error("Error fetching movies:", error)
-      setError("Failed to load movies")
-      toast.error("Error fetching movies", {
-        description: "Failed to load movies. Please try again.",
+      console.error("Error fetching TV shows:", error)
+      setError("Failed to load TV shows")
+      toast.error("Error fetching TV shows", {
+        description: "Failed to load TV shows. Please try again.",
       })
     } finally {
       setLoading(false)
@@ -88,9 +86,9 @@ export default function MoviesPage() {
 
       if (response.ok) {
         setWatchlist([...watchlist, movieId])
-        const movie = movies.find((m) => m.id === movieId)
-        toast.success("Movie added to watchlist!", {
-          description: `${movie?.title || movie?.title || "Movie"} ${sendEmail ? "added and email sent!" : "added to your watchlist!"}`,
+        const show = shows.find((s) => s.id === movieId)
+        toast.success("TV show added to watchlist!", {
+          description: `${show?.title || show?.title || "TV Show"} ${sendEmail ? "added and email sent!" : "added to your watchlist!"}`,
         })
       } else {
         const errorData = await response.json()
@@ -98,7 +96,7 @@ export default function MoviesPage() {
       }
     } catch (error) {
       toast.error("Error adding to watchlist", {
-        description: error instanceof Error ? error.message : "Failed to add movie to watchlist.",
+        description: error instanceof Error ? error.message : "Failed to add TV show to watchlist.",
       })
     }
   }
@@ -106,18 +104,16 @@ export default function MoviesPage() {
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category)
     setCurrentPage(1)
-    fetchMovies(category, 1)
-    // Update URL without page reload
+    fetchShows(category, 1)
     const url = new URL(window.location.href)
     url.searchParams.set("category", category)
-    url.searchParams.delete("page") // Remove page when changing category
+    url.searchParams.delete("page")
     window.history.pushState({}, "", url.toString())
   }
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
-    fetchMovies(activeCategory, page)
-    // Update URL with new page
+    fetchShows(activeCategory, page)
     const url = new URL(window.location.href)
     url.searchParams.set("page", page.toString())
     window.history.pushState({}, "", url.toString())
@@ -133,7 +129,7 @@ export default function MoviesPage() {
           <div className="text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">Something went wrong</h2>
             <p className="text-default-600 mb-6">{error}</p>
-            <Button color="primary" onClick={() => fetchMovies(activeCategory, currentPage)}>
+            <Button color="primary" onClickCapture={() => fetchShows(activeCategory, currentPage)}>
               Try Again
             </Button>
           </div>
@@ -146,20 +142,15 @@ export default function MoviesPage() {
     return (
       <div className="min-h-screen bg-background">
         <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header Skeleton */}
           <div className="mb-8">
             <Skeleton className="h-10 w-1/4 rounded-lg mb-2" />
             <Skeleton className="h-6 w-1/2 rounded-lg" />
           </div>
-
-          {/* Tabs Skeleton */}
           <div className="mb-8 flex gap-6">
             {categories.map((_, i) => (
               <Skeleton key={i} className="h-12 w-24 rounded-lg" />
             ))}
           </div>
-
-          {/* Movies Grid Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
             {[...Array(20)].map((_, i) => (
               <Card key={i} className="h-full">
@@ -176,8 +167,6 @@ export default function MoviesPage() {
               </Card>
             ))}
           </div>
-
-          {/* Pagination Skeleton */}
           <div className="flex justify-center">
             <Skeleton className="h-10 w-64 rounded-lg" />
           </div>
@@ -190,7 +179,7 @@ export default function MoviesPage() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Movies</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-2">TV Shows</h1>
           <p className="text-default-600 text-lg">{currentCategoryInfo?.description}</p>
           {totalResults > 0 && (
             <p className="text-sm text-default-500 mt-2">
@@ -199,7 +188,6 @@ export default function MoviesPage() {
           )}
         </div>
 
-        {/* Category Tabs */}
         <div className="mb-8">
           <Tabs
             selectedKey={activeCategory}
@@ -217,19 +205,17 @@ export default function MoviesPage() {
           </Tabs>
         </div>
 
-        {/* Movies Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
-          {movies.map((movie) => (
+          {shows.map((show) => (
             <MovieCard
-              key={movie.id}
-              movie={movie}
-              isInWatchlist={watchlist.includes(movie.id)}
+              key={show.id}
+              movie={{ ...show, media_type: "tv" }}
+              isInWatchlist={watchlist.includes(show.id)}
               onAddToWatchlist={handleAddToWatchlist}
             />
           ))}
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex flex-col items-center gap-4">
             <Pagination

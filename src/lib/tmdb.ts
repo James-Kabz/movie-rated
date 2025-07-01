@@ -49,6 +49,55 @@ export interface Credits {
   crew: Crew[]
 }
 
+// Add these interfaces after the existing ones
+export interface TVShow {
+  id: number
+  name: string
+  overview: string
+  poster_path: string | null
+  backdrop_path: string | null
+  first_air_date: string
+  vote_average: number
+  vote_count: number
+  genre_ids: number[]
+  adult: boolean
+  original_language: string
+  popularity: number
+  origin_country: string[]
+}
+
+export interface Person {
+  id: number
+  name: string
+  profile_path: string | null
+  adult: boolean
+  known_for: (Movie | TVShow)[]
+  known_for_department: string
+  popularity: number
+}
+
+export interface MultiSearchResult {
+  id: number
+  media_type: "movie" | "tv" | "person"
+  title?: string // for movies
+  name?: string // for TV shows and people
+  overview?: string
+  poster_path?: string | null
+  profile_path?: string | null
+  backdrop_path?: string | null
+  release_date?: string // for movies
+  first_air_date?: string // for TV shows
+  vote_average?: number
+  vote_count?: number
+  genre_ids?: number[]
+  adult?: boolean
+  original_language?: string
+  popularity: number
+  known_for?: (Movie | TVShow)[] // for people
+  known_for_department?: string // for people
+  origin_country?: string[] // for TV shows
+}
+
 class TMDBService {
   private async fetchFromTMDB(endpoint: string) {
     const response = await fetch(`${TMDB_BASE_URL}${endpoint}`, {
@@ -119,6 +168,51 @@ class TMDBService {
   getImageUrl(path: string | null, size = "w500") {
     if (!path) return "/placeholder-movie.jpg"
     return `https://image.tmdb.org/t/p/${size}${path}`
+  }
+
+  // Add these methods to the TMDBService class
+  async searchMulti(query: string, page = 1) {
+    return this.fetchFromTMDB(`/search/multi?query=${encodeURIComponent(query)}&page=${page}`)
+  }
+
+  async searchTVShows(query: string, page = 1) {
+    return this.fetchFromTMDB(`/search/tv?query=${encodeURIComponent(query)}&page=${page}`)
+  }
+
+  async searchPeople(query: string, page = 1) {
+    return this.fetchFromTMDB(`/search/person?query=${encodeURIComponent(query)}&page=${page}`)
+  }
+
+  async getPopularTVShows(page = 1) {
+    return this.fetchFromTMDB(`/tv/popular?page=${page}`)
+  }
+
+  async getTopRatedTVShows(page = 1) {
+    return this.fetchFromTMDB(`/tv/top_rated?page=${page}`)
+  }
+
+  async getTVShowDetails(tvId: number) {
+    return this.fetchFromTMDB(`/tv/${tvId}`)
+  }
+
+  async getTVShowCredits(tvId: number) {
+    return this.fetchFromTMDB(`/tv/${tvId}/credits`)
+  }
+
+  async getTVShowRecommendations(tvId: number, page = 1) {
+    return this.fetchFromTMDB(`/tv/${tvId}/recommendations?page=${page}`)
+  }
+
+  async getPersonDetails(personId: number) {
+    return this.fetchFromTMDB(`/person/${personId}`)
+  }
+
+  async getPersonMovieCredits(personId: number) {
+    return this.fetchFromTMDB(`/person/${personId}/movie_credits`)
+  }
+
+  async getPersonTVCredits(personId: number) {
+    return this.fetchFromTMDB(`/person/${personId}/tv_credits`)
   }
 }
 
