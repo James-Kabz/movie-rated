@@ -81,7 +81,11 @@ export default function TVShowsPage() {
       const response = await fetch("/api/watchlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ movieId, sendEmail }),
+        body: JSON.stringify({
+          movieId,
+          mediaType: "tv",
+          sendEmail,
+        }),
       })
 
       if (response.ok) {
@@ -156,7 +160,7 @@ export default function TVShowsPage() {
           <div className="text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">Something went wrong</h2>
             <p className="text-default-600 mb-6">{error}</p>
-            <Button color="primary" onClick={() => fetchShows(activeCategory, currentPage)}>
+            <Button color="primary" onPress={() => fetchShows(activeCategory, currentPage)}>
               Try Again
             </Button>
           </div>

@@ -67,6 +67,7 @@ model WatchlistItem {
   id          String   @id @default(cuid())
   userId      String
   movieId     Int
+  mediaType   String   @default("movie") // "movie" or "tv"
   movieTitle  String
   moviePoster String?
   movieYear   String?
@@ -77,7 +78,7 @@ model WatchlistItem {
   watchedAt   DateTime?
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, movieId])
+  @@unique([userId, movieId, mediaType])
 }
 
 model UserPreference {

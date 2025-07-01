@@ -56,7 +56,7 @@ export function SearchSuggestions({ query, onSelect, isVisible }: SearchSuggesti
     }
   }
 
-  const handleSuggestionClick = (suggestion: MultiSearchResult) => {
+  const handleSuggestionPress = (suggestion: MultiSearchResult) => {
     onSelect()
 
     if (suggestion.media_type === "movie") {
@@ -126,7 +126,7 @@ export function SearchSuggestions({ query, onSelect, isVisible }: SearchSuggesti
               {suggestions.map((suggestion) => (
                 <button
                   key={`${suggestion.media_type}-${suggestion.id}`}
-                  onClick={() => handleSuggestionClick(suggestion)}
+                  onPress={() => handleSuggestionPress(suggestion)}
                   className="w-full flex items-center gap-3 p-3 hover:bg-default-100 transition-colors text-left"
                 >
                   <Image
@@ -163,7 +163,7 @@ export function SearchSuggestions({ query, onSelect, isVisible }: SearchSuggesti
 
               {query.trim() && (
                 <button
-                  onClick={() => {
+                  onPress={() => {
                     onSelect()
                     router.push(`/search?q=${encodeURIComponent(query.trim())}`)
                   }}

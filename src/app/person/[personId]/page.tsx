@@ -79,7 +79,7 @@ export default function PersonDetailPage() {
         <Card className="mx-auto">
           <CardBody className="text-center py-8">
             <h1 className="text-2xl font-bold text-foreground mb-4">{error || "Person not found"}</h1>
-            <Button color="primary" onClick={fetchPersonData} className="mt-4">
+            <Button color="primary" onPress={fetchPersonData} className="mt-4">
               Try Again
             </Button>
           </CardBody>
@@ -154,7 +154,7 @@ export default function PersonDetailPage() {
                 size="sm"
                 color={activeTab === "movies" ? "primary" : "default"}
                 variant={activeTab === "movies" ? "solid" : "bordered"}
-                onClick={() => setActiveTab("movies")}
+                onPress={() => setActiveTab("movies")}
               >
                 Movies ({knownForMovies.length})
               </Button>
@@ -162,7 +162,7 @@ export default function PersonDetailPage() {
                 size="sm"
                 color={activeTab === "tv" ? "primary" : "default"}
                 variant={activeTab === "tv" ? "solid" : "bordered"}
-                onClick={() => setActiveTab("tv")}
+                onPress={() => setActiveTab("tv")}
               >
                 TV Shows ({knownForTV.length})
               </Button>

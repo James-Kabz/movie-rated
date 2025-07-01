@@ -5,10 +5,10 @@ import { useParams } from "next/navigation"
 import Image from "next/image"
 import { StarIcon, CalendarIcon, ClockIcon } from "@heroicons/react/24/solid"
 import { useSession } from "next-auth/react"
+import { toast } from "sonner"
 import { Button, Chip, Skeleton, Card, CardBody } from "@heroui/react"
 import type { MovieDetails, Credits, Cast, Crew } from "@/lib/tmdb"
 import { MovieCard } from "@/components/movie-card"
-import { toast } from "sonner"
 
 interface MovieData {
     movie: MovieDetails
@@ -16,11 +16,16 @@ interface MovieData {
     recommendations: { results: any[] }
 }
 
+interface WatchlistItem {
+    movieId: number
+    mediaType: string
+}
+
 export default function MovieDetailPage() {
     const { movieId } = useParams()
     const { data: session } = useSession()
     const [movieData, setMovieData] = useState<MovieData | null>(null)
-    const [watchlist, setWatchlist] = useState<number[]>([])
+    const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -76,13 +81,17 @@ export default function MovieDetailPage() {
                 throw new Error("Failed to fetch watchlist")
             }
             const data = await response.json()
-            setWatchlist(data.map((item: any) => item.movieId))
+            setWatchlist(data.map((item: any) => ({ movieId: item.movieId, mediaType: item.mediaType })))
         } catch (error) {
             console.error("Error fetching watchlist:", error)
             toast.error("Error fetching watchlist", {
-                description: error instanceof Error ? error.message : "Failed to fetch watchlist.",
+                description: "Failed to fetch your watchlist.",
             })
         }
+    }
+
+    const isInWatchlist = (movieId: number, mediaType = "movie") => {
+        return watchlist.some((item) => item.movieId === movieId && item.mediaType === mediaType)
     }
 
     const handleAddToWatchlist = async (movieId: number, sendEmail: boolean) => {
@@ -90,14 +99,12 @@ export default function MovieDetailPage() {
             const response = await fetch("/api/watchlist", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ movieId, sendEmail }),
+                body: JSON.stringify({ movieId, sendEmail, mediaType: "movie" }),
             })
 
             if (response.ok) {
-                setWatchlist([...watchlist, movieId])
-                toast.success("Movie added to watchlist!", {
-                    description: sendEmail ? "Movie added to watchlist and Email sent!" : "Movie added to watchlist!",
-                })
+                setWatchlist([...watchlist, { movieId, mediaType: "movie" }])
+                toast.success("Movie added to watchlist!")
             } else {
                 const errorData = await response.json()
                 throw new Error(errorData.error || "Failed to add to watchlist")
@@ -197,10 +204,10 @@ export default function MovieDetailPage() {
     if (error || !movieData?.movie) {
         return (
             <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <Card className=" mx-auto">
+                <Card className="max-w-md mx-auto">
                     <CardBody className="text-center py-8">
                         <h1 className="text-2xl font-bold text-foreground mb-4">{error || "Movie not found"}</h1>
-                        <Button color="primary" onClick={fetchMovieData} className="mt-4">
+                        <Button color="primary" onPress={fetchMovieData} className="mt-4">
                             Try Again
                         </Button>
                     </CardBody>
@@ -292,25 +299,15 @@ export default function MovieDetailPage() {
                             {session && (
                                 <div className="pt-4 flex gap-3">
                                     <Button
-                                        color={watchlist.includes(movie.id) ? "success" : "primary"}
-                                        variant={watchlist.includes(movie.id) ? "flat" : "solid"}
-                                        onClick={() => handleAddToWatchlist(movie.id, false)}
-                                        disabled={watchlist.includes(movie.id)}
+                                        className="px-4 py-2 rounded-lg text-lg font-bold"
+                                        color={isInWatchlist(movie.id, "movie") ? "success" : "secondary"}
+                                        variant={isInWatchlist(movie.id, "movie") ? "flat" : "solid"}
+                                        onPress={() => handleAddToWatchlist(movie.id, false)}
+                                        disabled={isInWatchlist(movie.id, "movie")}
                                         size="lg"
                                     >
-                                        {watchlist.includes(movie.id) ? "✓ In Watchlist" : "Add to Watchlist"}
+                                        {isInWatchlist(movie.id, "movie") ? "✓ In Watchlist" : "Add to Watchlist"}
                                     </Button>
-
-                                    {!watchlist.includes(movie.id) && (
-                                        <Button
-                                            color="secondary"
-                                            variant="bordered"
-                                            onClick={() => handleAddToWatchlist(movie.id, true)}
-                                            size="lg"
-                                        >
-                                            Add + Email Me
-                                        </Button>
-                                    )}
                                 </div>
                             )}
                         </div>
@@ -354,7 +351,7 @@ export default function MovieDetailPage() {
                                 <MovieCard
                                     key={movie.id}
                                     movie={movie}
-                                    isInWatchlist={watchlist.includes(movie.id)}
+                                    isInWatchlist={isInWatchlist(movie.id, "movie")}
                                     onAddToWatchlist={handleAddToWatchlist}
                                 />
                             ))}

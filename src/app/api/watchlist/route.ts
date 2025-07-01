@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-
 import { sendWatchListEmail } from "@/lib/email"
 import { tmdbService } from "@/lib/tmdb"
 import prisma from "@/lib/prisma"
@@ -35,6 +34,11 @@ export async function POST(request: NextRequest) {
   try {
     const { movieId, sendEmail, mediaType = "movie" } = await request.json()
 
+    // Validate mediaType
+    if (!["movie", "tv"].includes(mediaType)) {
+      return NextResponse.json({ error: "Invalid media type" }, { status: 400 })
+    }
+
     // Get content details from TMDB based on media type
     let contentDetails: any
     let title: string
@@ -42,26 +46,35 @@ export async function POST(request: NextRequest) {
     let releaseDate: string
     let genres: any[]
 
-    if (mediaType === "tv") {
-      contentDetails = await tmdbService.getTVShowDetails(movieId)
-      title = contentDetails.name
-      posterPath = contentDetails.poster_path
-      releaseDate = contentDetails.first_air_date
-      genres = contentDetails.genres || []
-    } else {
-      contentDetails = await tmdbService.getMovieDetails(movieId)
-      title = contentDetails.title
-      posterPath = contentDetails.poster_path
-      releaseDate = contentDetails.release_date
-      genres = contentDetails.genres || []
+    try {
+      if (mediaType === "tv") {
+        contentDetails = await tmdbService.getTVShowDetails(movieId)
+        title = contentDetails.name
+        posterPath = contentDetails.poster_path
+        releaseDate = contentDetails.first_air_date
+        genres = contentDetails.genres || []
+      } else {
+        contentDetails = await tmdbService.getMovieDetails(movieId)
+        title = contentDetails.title
+        posterPath = contentDetails.poster_path
+        releaseDate = contentDetails.release_date
+        genres = contentDetails.genres || []
+      }
+    } catch (tmdbError) {
+      console.error("TMDB API error:", tmdbError)
+      return NextResponse.json(
+        { error: `Failed to fetch ${mediaType === "tv" ? "TV show" : "movie"} details from TMDB` },
+        { status: 404 },
+      )
     }
 
-    // Check if already in watchlist
+    // Check if already in watchlist (now includes mediaType in the check)
     const existing = await prisma.watchlistItem.findUnique({
       where: {
-        userId_movieId: {
+        userId_movieId_mediaType: {
           userId: session.user.id,
           movieId: movieId,
+          mediaType: mediaType,
         },
       },
     })
@@ -73,11 +86,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Add to watchlist
+    // Add to watchlist with mediaType
     const watchlistItem = await prisma.watchlistItem.create({
       data: {
         userId: session.user.id,
         movieId: movieId,
+        mediaType: mediaType,
         movieTitle: title,
         moviePoster: tmdbService.getImageUrl(posterPath),
         movieYear: releaseDate?.split("-")[0] || "",

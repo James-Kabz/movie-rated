@@ -20,6 +20,7 @@ export function Navigation() {
   const { data: session } = useSession()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [watchlistCount, setWatchlistCount] = useState(0)
   const router = useRouter()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -29,6 +30,27 @@ export function Navigation() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Fetch watchlist count when user is logged in
+  useEffect(() => {
+    if (session) {
+      fetchWatchlistCount()
+    } else {
+      setWatchlistCount(0)
+    }
+  }, [session])
+
+  const fetchWatchlistCount = async () => {
+    try {
+      const response = await fetch("/api/watchlist")
+      if (response.ok) {
+        const data = await response.json()
+        setWatchlistCount(data.length)
+      }
+    } catch (error) {
+      console.error("Error fetching watchlist count:", error)
+    }
+  }
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -103,7 +125,7 @@ export function Navigation() {
       {({ open }) => (
         <>
           <div className="mx-auto px-2 sm:px-6 lg:px-8">
-            <div className="relative flex h-16 items-center justify-between">
+            <div className="relative flex h-20 items-center justify-between">
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
                 <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                   <span className="absolute -inset-0.5" />
@@ -119,7 +141,11 @@ export function Navigation() {
               <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex flex-shrink-0 items-center">
                   <div className="flex items-center space-x-2">
-                    <Image src={"/favicon.ico"} alt="Movie Rated" width={28} height={20} className="rounded-full ml-10 lg:ml-0" />
+                    <Image src={"/favicon.ico"}
+                      alt="Movie Rated"
+                      width={32}
+                      height={32}
+                      className="h-10 w-10 lg:h-16 lg:w-16 rounded-full ml-10 lg:ml-0" />
                     <Link href="/" className="hidden sm:block text-xl font-bold text-blue-600 dark:text-blue-400">
                       Movie Rated
                     </Link>
@@ -135,7 +161,7 @@ export function Navigation() {
                           item.current
                             ? "bg-gray-900 dark:bg-gray-700"
                             : "hover:bg-gray-500 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white",
-                          "rounded-md px-3 py-2 text-md font-bold transition-colors",
+                          "rounded-md px-6 py-6 text-md font-bold transition-colors truncate",
                         )}
                         aria-current={item.current ? "page" : undefined}
                       >
@@ -188,7 +214,7 @@ export function Navigation() {
                 </div>
               </div>
 
-              <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-2">
+              <div className="absolute inset-y-0 right-0 flex items-center sm:static sm:inset-auto sm:ml-8 sm:pr-0 space-x-2">
                 <button
                   onClick={toggleTheme}
                   className="p-2 rounded-full dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
@@ -205,11 +231,16 @@ export function Navigation() {
                   <>
                     <Link
                       href="/watchlist"
-                      className="hidden sm:block dark:hover:text-gray-500 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                      className="hidden sm:flex items-center gap-1 dark:hover:text-gray-500 px-3 py-2 rounded-md text-md font-medium transition-colors duration-200"
                     >
                       My Watchlist
+                      {watchlistCount > 0 && (
+                        <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                          {watchlistCount}
+                        </span>
+                      )}
                     </Link>
-                    <Menu as="div" className="relative ml-3">
+                    <Menu as="div" className="relative">
                       <div>
                         <Menu.Button className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                           <span className="absolute -inset-1.5" />
@@ -232,7 +263,7 @@ export function Navigation() {
                         leaveFrom="transform opacity-100 scale-100"
                         leaveTo="transform opacity-0 scale-95"
                       >
-                        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-300 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-600 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                           <Menu.Item>
                             {({ active }) => (
                               <Link
@@ -252,10 +283,15 @@ export function Navigation() {
                                 href="/watchlist"
                                 className={classNames(
                                   active ? "bg-gray-100 dark:bg-gray-600" : "",
-                                  "block px-4 py-2 text-sm  sm:hidden",
+                                  "flex items-center justify-between px-4 py-2 text-sm sm:hidden",
                                 )}
                               >
-                                My Watchlist
+                                <span>My Watchlist</span>
+                                {watchlistCount > 0 && (
+                                  <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                    {watchlistCount}
+                                  </span>
+                                )}
                               </Link>
                             )}
                           </Menu.Item>
@@ -329,9 +365,14 @@ export function Navigation() {
                 <Disclosure.Button
                   as={Link}
                   href="/watchlist"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
+                  className="flex items-center justify-between rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
                 >
-                  My Watchlist
+                  <span>My Watchlist</span>
+                  {watchlistCount > 0 && (
+                    <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                      {watchlistCount}
+                    </span>
+                  )}
                 </Disclosure.Button>
               )}
             </div>

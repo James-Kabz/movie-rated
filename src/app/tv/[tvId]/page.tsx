@@ -81,7 +81,7 @@ export default function TVShowDetailPage() {
       if (response.ok) {
         setWatchlist([...watchlist, tvId])
         toast.success("TV show added to watchlist!", {
-          description: sendEmail ? "TV show added and email sent!" : "TV show added to your watchlist!",
+          description: "TV show added to your watchlist!",
         })
       } else {
         const errorData = await response.json()
@@ -97,7 +97,7 @@ export default function TVShowDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="relative mb-8">
             <div className="absolute inset-0 z-0 rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
             <div className="relative z-10 flex flex-col md:flex-row gap-8 py-8">
@@ -134,11 +134,11 @@ export default function TVShowDetailPage() {
 
   if (error || !tvData?.tv) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card className="max-w-md mx-auto">
           <CardBody className="text-center py-8">
             <h1 className="text-2xl font-bold text-foreground mb-4">{error || "TV show not found"}</h1>
-            <Button color="primary" onClick={fetchTVData} className="mt-4">
+            <Button color="primary" onPress={fetchTVData} className="mt-4">
               Try Again
             </Button>
           </CardBody>
@@ -153,7 +153,7 @@ export default function TVShowDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="relative mb-8">
           {tv?.backdrop_path && (
             <div className="absolute inset-0 z-0 rounded-xl overflow-hidden">
@@ -227,25 +227,15 @@ export default function TVShowDetailPage() {
               {session && (
                 <div className="pt-4 flex gap-3">
                   <Button
-                    color={watchlist.includes(tv.id) ? "success" : "primary"}
+                    className="px-4 py-2 rounded-lg text-lg font-bold"
+                    color={watchlist.includes(tv.id) ? "success" : "secondary"}
                     variant={watchlist.includes(tv.id) ? "flat" : "solid"}
-                    onClick={() => handleAddToWatchlist(tv.id, false)}
+                    onPress={() => handleAddToWatchlist(tv.id, false)}
                     disabled={watchlist.includes(tv.id)}
                     size="lg"
                   >
                     {watchlist.includes(tv.id) ? "✓ In Watchlist" : "Add to Watchlist"}
                   </Button>
-
-                  {!watchlist.includes(tv.id) && (
-                    <Button
-                      color="secondary"
-                      variant="bordered"
-                      onClick={() => handleAddToWatchlist(tv.id, true)}
-                      size="lg"
-                    >
-                      Add + Email Me
-                    </Button>
-                  )}
                 </div>
               )}
             </div>
