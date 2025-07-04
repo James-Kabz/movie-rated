@@ -32,6 +32,24 @@ export default function TVShowDetailPage() {
     }
   }, [tvId, session])
 
+  useEffect(() => {
+    if (tvData?.tv && session && tvId) {
+      trackRecentlyViewed(Number(tvId), "tv")
+    }
+  }, [tvData, session, tvId])
+
+  const trackRecentlyViewed = async (movieId: number, mediaType: string) => {
+    try {
+      await fetch("/api/recently-viewed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ movieId, mediaType }),
+      })
+    } catch (error) {
+      console.error("Error tracking recently viewed:", error)
+    }
+  }
+
   const fetchTVData = async () => {
     try {
       setLoading(true)
