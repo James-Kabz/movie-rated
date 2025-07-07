@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Movie Rated",
+  title: "Cine Taste",
   description: "Rate and track your favorite movies",
 }
 

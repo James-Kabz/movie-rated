@@ -32,67 +32,129 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { movieId, mediaType = "movie" } = await request.json()
+    const { movieId, mediaType = "movie", fromWatchlist = false } = await request.json()
 
     // Validate mediaType
     if (!["movie", "tv"].includes(mediaType)) {
       return NextResponse.json({ error: "Invalid media type" }, { status: 400 })
     }
 
-    // Get content details from TMDB based on media type
+    // If this is from watchlist (marking as watched), we need the content details
     let contentDetails: any
     let title: string
     let posterPath: string | null
     let releaseDate: string
     let genres: any[]
 
-    try {
-      if (mediaType === "tv") {
-        contentDetails = await tmdbService.getTVShowDetails(movieId)
-        title = contentDetails.name
-        posterPath = contentDetails.poster_path
-        releaseDate = contentDetails.first_air_date
-        genres = contentDetails.genres || []
-      } else {
-        contentDetails = await tmdbService.getMovieDetails(movieId)
-        title = contentDetails.title
-        posterPath = contentDetails.poster_path
-        releaseDate = contentDetails.release_date
-        genres = contentDetails.genres || []
+    if (fromWatchlist) {
+      // Get content details from TMDB based on media type
+      try {
+        if (mediaType === "tv") {
+          contentDetails = await tmdbService.getTVShowDetails(movieId)
+          title = contentDetails.name
+          posterPath = contentDetails.poster_path
+          releaseDate = contentDetails.first_air_date
+          genres = contentDetails.genres || []
+        } else {
+          contentDetails = await tmdbService.getMovieDetails(movieId)
+          title = contentDetails.title
+          posterPath = contentDetails.poster_path
+          releaseDate = contentDetails.release_date
+          genres = contentDetails.genres || []
+        }
+      } catch (tmdbError) {
+        console.error("TMDB API error:", tmdbError)
+        return NextResponse.json(
+          { error: `Failed to fetch ${mediaType === "tv" ? "TV show" : "movie"} details from TMDB` },
+          { status: 404 },
+        )
       }
-    } catch (tmdbError) {
-      console.error("TMDB API error:", tmdbError)
-      return NextResponse.json(
-        { error: `Failed to fetch ${mediaType === "tv" ? "TV show" : "movie"} details from TMDB` },
-        { status: 404 },
-      )
-    }
 
-    // Upsert recently viewed item (update viewedAt if exists, create if not)
-    const recentlyViewedItem = await prisma.recentlyViewed.upsert({
-      where: {
-        userId_movieId_mediaType: {
+      // Upsert recently viewed item (update viewedAt if exists, create if not)
+      const recentlyViewedItem = await prisma.recentlyViewed.upsert({
+        where: {
+          userId_movieId_mediaType: {
+            userId: session.user.id,
+            movieId: movieId,
+            mediaType: mediaType,
+          },
+        },
+        update: {
+          viewedAt: new Date(),
+        },
+        create: {
           userId: session.user.id,
           movieId: movieId,
           mediaType: mediaType,
+          movieTitle: title,
+          moviePoster: tmdbService.getImageUrl(posterPath),
+          movieYear: releaseDate?.split("-")[0] || "",
+          rating: contentDetails.vote_average || 0,
+          genre: genres[0]?.name || "",
         },
-      },
-      update: {
-        viewedAt: new Date(),
-      },
-      create: {
-        userId: session.user.id,
-        movieId: movieId,
-        mediaType: mediaType,
-        movieTitle: title,
-        moviePoster: tmdbService.getImageUrl(posterPath),
-        movieYear: releaseDate?.split("-")[0] || "",
-        rating: contentDetails.vote_average || 0,
-        genre: genres[0]?.name || "",
-      },
-    })
+      })
 
-    return NextResponse.json(recentlyViewedItem)
+      return NextResponse.json(recentlyViewedItem)
+    } else {
+      // This is just a page view, only track if we don't already have it
+      const existing = await prisma.recentlyViewed.findUnique({
+        where: {
+          userId_movieId_mediaType: {
+            userId: session.user.id,
+            movieId: movieId,
+            mediaType: mediaType,
+          },
+        },
+      })
+
+      if (existing) {
+        // Just update the viewed time
+        const updated = await prisma.recentlyViewed.update({
+          where: { id: existing.id },
+          data: { viewedAt: new Date() },
+        })
+        return NextResponse.json(updated)
+      }
+
+      // Get content details for new entry
+      try {
+        if (mediaType === "tv") {
+          contentDetails = await tmdbService.getTVShowDetails(movieId)
+          title = contentDetails.name
+          posterPath = contentDetails.poster_path
+          releaseDate = contentDetails.first_air_date
+          genres = contentDetails.genres || []
+        } else {
+          contentDetails = await tmdbService.getMovieDetails(movieId)
+          title = contentDetails.title
+          posterPath = contentDetails.poster_path
+          releaseDate = contentDetails.release_date
+          genres = contentDetails.genres || []
+        }
+      } catch (tmdbError) {
+        console.error("TMDB API error:", tmdbError)
+        return NextResponse.json(
+          { error: `Failed to fetch ${mediaType === "tv" ? "TV show" : "movie"} details from TMDB` },
+          { status: 404 },
+        )
+      }
+
+      // Create new recently viewed item
+      const recentlyViewedItem = await prisma.recentlyViewed.create({
+        data: {
+          userId: session.user.id,
+          movieId: movieId,
+          mediaType: mediaType,
+          movieTitle: title,
+          moviePoster: tmdbService.getImageUrl(posterPath),
+          movieYear: releaseDate?.split("-")[0] || "",
+          rating: contentDetails.vote_average || 0,
+          genre: genres[0]?.name || "",
+        },
+      })
+
+      return NextResponse.json(recentlyViewedItem)
+    }
   } catch (error) {
     console.error("Error adding to recently viewed:", error)
     return NextResponse.json({ error: "Failed to add to recently viewed" }, { status: 500 })
