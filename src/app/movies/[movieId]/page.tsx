@@ -38,6 +38,24 @@ export default function MovieDetailPage() {
         }
     }, [movieId, session])
 
+    // Track recently viewed when movie data is loaded
+    useEffect(() => {
+        if (movieData?.movie && session && movieId) {
+            trackRecentlyViewed(Number(movieId), "movie")
+        }
+    }, [movieData, session, movieId])
+
+    const trackRecentlyViewed = async (movieId: number, mediaType: string) => {
+        try {
+            await fetch("/api/recently-viewed", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ movieId, mediaType }),
+            })
+        } catch (error) {
+            console.error("Error tracking recently viewed:", error)
+        }
+    }
     const fetchMovieData = async () => {
         try {
             setLoading(true);

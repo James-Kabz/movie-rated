@@ -111,8 +111,8 @@ export function Navigation() {
         <div className="mx-auto px-2 sm:px-6 lg:px-8">
           <div className="relative flex h-16 items-center justify-between">
             <div className="flex flex-shrink-0 items-center">
-              <Image src={"/favicon.ico"} alt="Movie Rated" width={32} height={32} className="rounded-full" />
-              <span className="hidden sm:block text-xl font-bold text-blue-600 ml-2">Movie Rated</span>
+              <Image src={"/favicon.ico"} alt="Cine Taste" width={32} height={32} className="rounded-full" />
+              <span className="hidden sm:block text-xl font-bold text-blue-600 ml-2">Cine Taste</span>
             </div>
           </div>
         </div>
@@ -125,7 +125,7 @@ export function Navigation() {
       {({ open }) => (
         <>
           <div className="mx-auto px-2 sm:px-6 lg:px-8">
-            <div className="relative flex h-20 items-center justify-between">
+            <div className="relative flex h-16 items-center justify-between">
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
                 <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                   <span className="absolute -inset-0.5" />
@@ -138,21 +138,23 @@ export function Navigation() {
                 </Disclosure.Button>
               </div>
 
-              <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
-                <div className="flex flex-shrink-0 items-center">
+              <div className="flex items-center justify-center sm:items-stretch sm:justify-start">
+                <div className="flex items-center">
                   <div className="flex items-center space-x-2">
-                    <Image src={"/favicon.ico"}
-                      alt="Movie Rated"
+                    <Image
+                      src={"/favicon.ico"}
+                      alt="Cine Taste"
                       width={32}
                       height={32}
-                      className="h-10 w-10 lg:h-16 lg:w-16 rounded-full ml-10 lg:ml-0" />
+                      className="rounded-full ml-10 sm:ml-0"
+                    />
                     <Link href="/" className="hidden sm:block text-xl font-bold text-blue-600 dark:text-blue-400">
-                      Movie Rated
+                      Cine Taste
                     </Link>
                   </div>
                 </div>
                 <div className="hidden sm:ml-6 sm:block">
-                  <div className="flex space-x-4">
+                  <div className="flex space-x-6">
                     {navigation.map((item) => (
                       <Link
                         key={item.name}
@@ -161,7 +163,7 @@ export function Navigation() {
                           item.current
                             ? "bg-gray-900 dark:bg-gray-700"
                             : "hover:bg-gray-500 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white",
-                          "rounded-md px-6 py-6 text-md font-bold transition-colors truncate",
+                          "rounded-md px-4 py-4 text-lg font-bold transition-colors",
                         )}
                         aria-current={item.current ? "page" : undefined}
                       >
@@ -174,7 +176,7 @@ export function Navigation() {
 
               {/* Desktop Search */}
               <div className="hidden sm:flex flex-1 justify-center px-2 lg:ml-6 lg:justify-end">
-                <div className="max-w-lg w-full lg:max-w-xs relative" ref={searchRef}>
+                <div className="max-w-lg w-full lg:max-w-2xl relative" ref={searchRef}>
                   <form onSubmit={handleSearch} className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" aria-hidden="true" />
@@ -193,31 +195,10 @@ export function Navigation() {
                 </div>
               </div>
 
-              {/* Mobile Search - Always visible */}
-              <div className="flex sm:hidden flex-2 justify-center px-2 mx-4 mr-20" ref={mobileSearchRef}>
-                <div className="max-w-lg w-full relative">
-                  <form onSubmit={handleSearch} className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <MagnifyingGlassIcon className="h-4 w-4 text-gray-400 dark:text-gray-500" aria-hidden="true" />
-                    </div>
-                    <input
-                      className="search-input block w-full pl-9 pr-3 py-1.5 border rounded-md leading-5 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-colors"
-                      placeholder="Search..."
-                      type="search"
-                      value={searchQuery}
-                      onChange={handleSearchInputChange}
-                      onFocus={handleSearchFocus}
-                    />
-                  </form>
-
-                  <SearchSuggestions query={searchQuery} onSelect={closeSuggestions} isVisible={showSuggestions} />
-                </div>
-              </div>
-
-              <div className="absolute inset-y-0 right-0 flex items-center sm:static sm:inset-auto sm:ml-8 sm:pr-0 space-x-2">
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-2">
                 <button
                   onClick={toggleTheme}
-                  className="p-2 rounded-full dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                  className="p-2 rounded-full text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
                   aria-label="Toggle theme"
                 >
                   {theme === "dark" ? (
@@ -231,7 +212,7 @@ export function Navigation() {
                   <>
                     <Link
                       href="/watchlist"
-                      className="hidden sm:flex items-center gap-1 dark:hover:text-gray-500 px-3 py-2 rounded-md text-md font-medium transition-colors duration-200"
+                      className="hidden sm:flex items-center gap-1 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-bold transition-colors duration-200"
                     >
                       My Watchlist
                       {watchlistCount > 0 && (
@@ -240,7 +221,7 @@ export function Navigation() {
                         </span>
                       )}
                     </Link>
-                    <Menu as="div" className="relative">
+                    <Menu as="div" className="relative ml-3">
                       <div>
                         <Menu.Button className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                           <span className="absolute -inset-1.5" />
@@ -263,14 +244,14 @@ export function Navigation() {
                         leaveFrom="transform opacity-100 scale-100"
                         leaveTo="transform opacity-0 scale-95"
                       >
-                        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-600 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-700 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                           <Menu.Item>
                             {({ active }) => (
                               <Link
                                 href="/profile"
                                 className={classNames(
                                   active ? "bg-gray-100 dark:bg-gray-600" : "",
-                                  "block px-4 py-2 text-sm ",
+                                  "block px-4 py-2 text-sm text-gray-700 dark:text-gray-200",
                                 )}
                               >
                                 Your Profile
@@ -283,7 +264,7 @@ export function Navigation() {
                                 href="/watchlist"
                                 className={classNames(
                                   active ? "bg-gray-100 dark:bg-gray-600" : "",
-                                  "flex items-center justify-between px-4 py-2 text-sm sm:hidden",
+                                  "flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-200 sm:hidden",
                                 )}
                               >
                                 <span>My Watchlist</span>
@@ -301,7 +282,7 @@ export function Navigation() {
                                 onClick={() => signOut()}
                                 className={classNames(
                                   active ? "bg-gray-100 dark:bg-gray-600" : "",
-                                  "block w-full text-left px-4 py-2 text-sm",
+                                  "block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200",
                                 )}
                               >
                                 Sign out
@@ -315,7 +296,7 @@ export function Navigation() {
                 ) : (
                   <button
                     onClick={() => signIn("google")}
-                    className="btn-primary px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                    className="btn-primary px-4 py-2 rounded-md text-sm font-bold transition-colors duration-200"
                   >
                     Sign In
                   </button>
@@ -325,6 +306,27 @@ export function Navigation() {
           </div>
 
           <Disclosure.Panel className="sm:hidden">
+            {/* Mobile Search - Moved to top of mobile menu */}
+            <div className="px-2 pt-2 pb-3 border-b border-gray-200 dark:border-gray-700">
+              <div className="relative" ref={mobileSearchRef}>
+                <form onSubmit={handleSearch} className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+                  </div>
+                  <input
+                    className="search-input block w-full pl-10 pr-3 py-3 border rounded-md leading-5 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-colors"
+                    placeholder="Search movies, TV shows, people..."
+                    type="search"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    onFocus={handleSearchFocus}
+                  />
+                </form>
+
+                <SearchSuggestions query={searchQuery} onSelect={closeSuggestions} isVisible={showSuggestions} />
+              </div>
+            </div>
+
             <div className="space-y-1 px-2 pb-3 pt-2">
               {navigation.map((item) => (
                 <Disclosure.Button
@@ -335,7 +337,7 @@ export function Navigation() {
                     item.current
                       ? "bg-gray-900 dark:bg-gray-700"
                       : "hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white",
-                    "block rounded-md px-3 py-2 text-base font-medium transition-colors duration-200",
+                    "block rounded-md px-3 py-2 text-base font-bold transition-colors duration-200",
                   )}
                   aria-current={item.current ? "page" : undefined}
                 >
@@ -346,7 +348,7 @@ export function Navigation() {
               <Disclosure.Button
                 as="button"
                 onClick={toggleTheme}
-                className="w-full flex items-center text-left rounded-md px-3 py-2 text-base font-medium hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
+                className="w-full flex items-center text-left rounded-md px-3 py-2 text-base font-bold hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
               >
                 {theme === "dark" ? (
                   <>
@@ -365,7 +367,7 @@ export function Navigation() {
                 <Disclosure.Button
                   as={Link}
                   href="/watchlist"
-                  className="flex items-center justify-between rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
+                  className="flex items-center justify-between rounded-md px-3 py-2 text-base font-bold text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white transition-colors duration-200"
                 >
                   <span>My Watchlist</span>
                   {watchlistCount > 0 && (

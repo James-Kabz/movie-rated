@@ -152,7 +152,7 @@ export default function PersonDetailPage() {
             <div className="flex gap-2">
               <Button
                 size="sm"
-                color={activeTab === "movies" ? "primary" : "default"}
+                color={activeTab === "movies" ? "secondary" : "default"}
                 variant={activeTab === "movies" ? "solid" : "bordered"}
                 onPress={() => setActiveTab("movies")}
               >
@@ -160,7 +160,7 @@ export default function PersonDetailPage() {
               </Button>
               <Button
                 size="sm"
-                color={activeTab === "tv" ? "primary" : "default"}
+                color={activeTab === "tv" ? "secondary" : "default"}
                 variant={activeTab === "tv" ? "solid" : "bordered"}
                 onPress={() => setActiveTab("tv")}
               >
