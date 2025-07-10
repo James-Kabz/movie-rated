@@ -1,15 +1,13 @@
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
 import { NextResponse } from "next/server"
 import jsonwebtoken from "jsonwebtoken"
 
 export async function POST(request: Request) {
     try {
-        // Get the request body as text first for debugging
+        console.log("Mobile session API called")
+
         const requestBody = await request.text()
         console.log("Raw request body:", requestBody)
 
-        // Check if body is empty
         if (!requestBody || requestBody.trim() === "") {
             return NextResponse.json({ error: "Request body is empty" }, { status: 400 })
         }
@@ -37,23 +35,28 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Token required" }, { status: 400 })
         }
 
-        // Verify the temporary token
+        // Verify and decode the token
+        let decoded: any
         try {
-            jsonwebtoken.verify(token, process.env.NEXTAUTH_SECRET!)
+            decoded = jsonwebtoken.verify(token, process.env.NEXTAUTH_SECRET!)
             console.log("Token verified successfully")
         } catch (error) {
             console.error("Token verification failed:", error)
             return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 })
         }
 
-        // Get the current session
-        const session = await getServerSession(authOptions)
-        console.log("Retrieved session:", session)
-
-        if (!session) {
-            return NextResponse.json({ error: "No session found" }, { status: 401 })
+        // Return session data from the token
+        const session = {
+            user: {
+                id: decoded.userId,
+                name: decoded.name,
+                email: decoded.email,
+                image: decoded.image,
+            },
+            expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
         }
 
+        console.log("Returning session for user:", decoded.email)
         return NextResponse.json(session)
     } catch (error) {
         console.error("Mobile session API error:", error)
@@ -61,7 +64,6 @@ export async function POST(request: Request) {
     }
 }
 
-// Add a GET method for testing
 export async function GET() {
     return NextResponse.json({
         message: "Mobile session endpoint is working",
