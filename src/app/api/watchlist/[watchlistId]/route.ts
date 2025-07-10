@@ -2,10 +2,31 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import jsonwebtoken from "jsonwebtoken"
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ watchlistId: string }> }) {
     const session = await getServerSession(authOptions);
+    let userId: string | null = session?.user?.id || null
 
+    if (!userId) {
+        const authHeader = request.headers.get("authorization")
+        if (authHeader?.startsWith("Bearer ")) {
+            const token = authHeader.substring(7)
+
+            try {
+                const decoded = jsonwebtoken.verify(token, process.env.NEXTAUTH_SECRET!) as any
+                userId = decoded.userId
+                console.log("Mobile auth successful for user:", decoded.email)
+            } catch (error) {
+                console.error("Mobile token verification failed:", error)
+                return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+            }
+        }
+    }
+
+    if (!userId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
     if (!session?.user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -32,10 +53,31 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ w
 
 export async function PUT(request: Request, { params }: { params: Promise<{ watchlistId: string }> }) {
     const session = await getServerSession(authOptions);
+    let userId: string | null = session?.user?.id || null
 
-    if (!session?.user?.id) {
+    // If no NextAuth session, try mobile token
+    if (!userId) {
+        const authHeader = request.headers.get("authorization")
+        if (authHeader?.startsWith("Bearer ")) {
+            const token = authHeader.substring(7)
+
+            try {
+                const decoded = jsonwebtoken.verify(token, process.env.NEXTAUTH_SECRET!) as any
+                userId = decoded.userId
+                // userEmail = decoded.email
+                // userName = decoded.name
+                console.log("Mobile auth successful for user:", decoded.email)
+            } catch (error) {
+                console.error("Mobile token verification failed:", error)
+                return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+            }
+        }
+    }
+
+    if (!userId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
 
     const { watchlistId } = await params
 
@@ -46,7 +88,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ watc
         const watchlistItem = await prisma.watchlistItem.findUnique({
             where: {
                 id: watchlistId,
-                userId: session.user.id,
+                userId,
             },
         })
 
@@ -56,7 +98,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ watc
         const updatedItem = await prisma.watchlistItem.update({
             where: {
                 id: watchlistId,
-                userId: session.user?.id
+                userId
             },
             data: {
                 watched,
@@ -70,7 +112,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ watc
                 await prisma.recentlyViewed.upsert({
                     where: {
                         userId_movieId_mediaType: {
-                            userId: session.user.id,
+                            userId,
                             movieId: watchlistItem.movieId,
                             mediaType: watchlistItem.mediaType,
                         },
@@ -79,7 +121,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ watc
                         viewedAt: new Date(),
                     },
                     create: {
-                        userId: session.user.id,
+                        userId,
                         movieId: watchlistItem.movieId,
                         mediaType: watchlistItem.mediaType,
                         movieTitle: watchlistItem.movieTitle,

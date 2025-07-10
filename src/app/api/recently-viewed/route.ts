@@ -3,17 +3,35 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { tmdbService } from "@/lib/tmdb"
 import prisma from "@/lib/prisma"
+import jsonwebtoken from "jsonwebtoken"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
+  let userId: string | null = session?.user?.id || null
 
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  // If no NextAuth session, try mobile token
+  if (!userId) {
+    const authHeader = request.headers.get("authorization")
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7)
+
+      try {
+        const decoded = jsonwebtoken.verify(token, process.env.NEXTAUTH_SECRET!) as any
+        userId = decoded.userId
+        console.log("Mobile auth successful for user:", decoded.email)
+      } catch (error) {
+        console.error("Mobile token verification failed:", error)
+        return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+      }
+    }
   }
 
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   try {
     const recentlyViewed = await prisma.recentlyViewed.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       orderBy: { viewedAt: "desc" },
       take: 20, // Limit to last 20 items
     })
@@ -26,10 +44,31 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
+  let userId: string | null = session?.user?.id || null
 
-  if (!session?.user?.id) {
+  // If no NextAuth session, try mobile token
+  if (!userId) {
+    const authHeader = request.headers.get("authorization")
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7)
+
+      try {
+        const decoded = jsonwebtoken.verify(token, process.env.NEXTAUTH_SECRET!) as any
+        userId = decoded.userId
+        // userEmail = decoded.email
+        // userName = decoded.name
+        console.log("Mobile auth successful for user:", decoded.email)
+      } catch (error) {
+        console.error("Mobile token verification failed:", error)
+        return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+      }
+    }
+  }
+
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
 
   try {
     const { movieId, mediaType = "movie", fromWatchlist = false } = await request.json()
@@ -74,7 +113,7 @@ export async function POST(request: NextRequest) {
       const recentlyViewedItem = await prisma.recentlyViewed.upsert({
         where: {
           userId_movieId_mediaType: {
-            userId: session.user.id,
+            userId,
             movieId: movieId,
             mediaType: mediaType,
           },
@@ -83,7 +122,7 @@ export async function POST(request: NextRequest) {
           viewedAt: new Date(),
         },
         create: {
-          userId: session.user.id,
+          userId,
           movieId: movieId,
           mediaType: mediaType,
           movieTitle: title,
@@ -100,7 +139,7 @@ export async function POST(request: NextRequest) {
       const existing = await prisma.recentlyViewed.findUnique({
         where: {
           userId_movieId_mediaType: {
-            userId: session.user.id,
+            userId,
             movieId: movieId,
             mediaType: mediaType,
           },
@@ -142,7 +181,7 @@ export async function POST(request: NextRequest) {
       // Create new recently viewed item
       const recentlyViewedItem = await prisma.recentlyViewed.create({
         data: {
-          userId: session.user.id,
+          userId ,
           movieId: movieId,
           mediaType: mediaType,
           movieTitle: title,

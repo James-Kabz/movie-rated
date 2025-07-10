@@ -7,7 +7,6 @@ import jsonwebtoken from "jsonwebtoken"
 import prisma from "@/lib/prisma"
 
 export async function GET(request: NextRequest) {
-  // Try NextAuth session first (for web)
   const session = await getServerSession(authOptions)
   let userId: string | null = session?.user?.id || null
 
