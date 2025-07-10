@@ -1,33 +1,78 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { sendWatchListEmail } from "@/lib/email"
 import { tmdbService } from "@/lib/tmdb"
+// import { sendWatchListEmail } from "@/emails/sendWatchListEmail"
+import jsonwebtoken from "jsonwebtoken"
 import prisma from "@/lib/prisma"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Try NextAuth session first (for web)
   const session = await getServerSession(authOptions)
+  let userId: string | null = session?.user?.id || null
 
-  if (!session?.user?.id) {
+  // If no NextAuth session, try mobile token
+  if (!userId) {
+    const authHeader = request.headers.get("authorization")
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7)
+
+      try {
+        const decoded = jsonwebtoken.verify(token, process.env.NEXTAUTH_SECRET!) as any
+        userId = decoded.userId
+        console.log("Mobile auth successful for user:", decoded.email)
+      } catch (error) {
+        console.error("Mobile token verification failed:", error)
+        return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+      }
+    }
+  }
+
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   try {
     const watchlist = await prisma.watchlistItem.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       orderBy: { addedAt: "desc" },
     })
 
+    console.log(`Found ${watchlist.length} watchlist items for user ${userId}`)
     return NextResponse.json(watchlist)
   } catch (error) {
+    console.error("Error fetching watchlist:", error)
     return NextResponse.json({ error: "Failed to fetch watchlist" }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
+  // Try NextAuth session first (for web)
   const session = await getServerSession(authOptions)
+  let userId: string | null = session?.user?.id || null
+  let userEmail: string | null = session?.user?.email || null
+  let userName: string | null = session?.user?.name || null
 
-  if (!session?.user?.id) {
+  // If no NextAuth session, try mobile token
+  if (!userId) {
+    const authHeader = request.headers.get("authorization")
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7)
+
+      try {
+        const decoded = jsonwebtoken.verify(token, process.env.NEXTAUTH_SECRET!) as any
+        userId = decoded.userId
+        userEmail = decoded.email
+        userName = decoded.name
+        console.log("Mobile auth successful for user:", decoded.email)
+      } catch (error) {
+        console.error("Mobile token verification failed:", error)
+        return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+      }
+    }
+  }
+
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -72,7 +117,7 @@ export async function POST(request: NextRequest) {
     const existing = await prisma.watchlistItem.findUnique({
       where: {
         userId_movieId_mediaType: {
-          userId: session.user.id,
+          userId: userId,
           movieId: movieId,
           mediaType: mediaType,
         },
@@ -89,7 +134,7 @@ export async function POST(request: NextRequest) {
     // Add to watchlist with mediaType
     const watchlistItem = await prisma.watchlistItem.create({
       data: {
-        userId: session.user.id,
+        userId: userId,
         movieId: movieId,
         mediaType: mediaType,
         movieTitle: title,
@@ -99,12 +144,7 @@ export async function POST(request: NextRequest) {
         genre: genres[0]?.name || "",
       },
     })
-
-    // Send email if requested
-    if (sendEmail && session.user.email && session.user.name) {
-      await sendWatchListEmail(session.user.email, session.user.name, title, tmdbService.getImageUrl(posterPath))
-    }
-
+    console.log("Watchlist item created:", watchlistItem)
     return NextResponse.json(watchlistItem)
   } catch (error) {
     console.error("Error adding to watchlist:", error)
