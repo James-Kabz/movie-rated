@@ -3,7 +3,6 @@ import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google"
 import prisma from "./prisma";
 
-
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
     providers: [
@@ -16,35 +15,50 @@ export const authOptions: NextAuthOptions = {
                 }
             }
         }),
-        // ...add more providers
     ],
     callbacks: {
-
-        async redirect({url,baseUrl}) {
-            if (url.startsWith("/cinetaste://")) 
+        async redirect({ url, baseUrl }) {
+            console.log('Redirect callback:', { url, baseUrl });
+            
+            // Handle your app's deep links
+            if (url.startsWith("cinetaste://")) {
                 return url;
-            // allow relative callback URLs
-            if (url.startsWith("/"))
-                return `${baseUrl}${url}`
-            // allow callback urls from the same origin
-            if (new URL(url).origin === baseUrl)
+            }
+            
+            // Handle Expo development URLs
+            if (url.startsWith("exp://")) {
+                // Convert to your app's deep link with success indicator
+                return `cinetaste://auth-callback?success=true`;
+            }
+            
+            // Allow relative callback URLs
+            if (url.startsWith("/")) {
+                return `${baseUrl}${url}`;
+            }
+            
+            // Allow callback URLs from the same origin
+            if (new URL(url).origin === baseUrl) {
                 return url;
+            }
+            
+            // Default fallback
             return baseUrl;
         },
         session: async ({ session, token }) => {
             if (session.user) {
-                session.user.id = token.sub!
+                session.user.id = token.sub!;
             }
-            return session
+            return session;
         },
-        jwt: async ({ user ,token }) => {
+        jwt: async ({ user, token }) => {
             if (user) {
-                token.uid = user.id
+                token.uid = user.id;
             }
-            return token
+            return token;
         },
     },
     session: {
         strategy: "jwt"
-    }
+    },
+    debug: process.env.NODE_ENV === 'development',
 }
