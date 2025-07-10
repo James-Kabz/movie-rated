@@ -9,11 +9,30 @@ export const authOptions: NextAuthOptions = {
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            authorization: {
+                params: {
+                    scope: "openid email profile",
+                    // allow my app's redirect URI
+                    redirect_uri: "cinetaste://auth-callback"
+                }
+            }
         }),
         // ...add more providers
     ],
     callbacks: {
+
+        async redirect({url,baseUrl}) {
+            if (url.startsWith("/cinetaste://")) 
+                return url;
+            // allow relative callback URLs
+            if (url.startsWith("/"))
+                return `${baseUrl}${url}`
+            // allow callback urls from the same origin
+            if (new URL(url).origin === baseUrl)
+                return url;
+            return baseUrl;
+        },
         session: async ({ session, token }) => {
             if (session.user) {
                 session.user.id = token.sub!
