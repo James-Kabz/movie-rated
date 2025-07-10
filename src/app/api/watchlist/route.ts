@@ -151,3 +151,65 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to add to watchlist" }, { status: 500 })
   }
 }
+
+
+export async function DELETE(request: NextRequest) {
+  // Try NextAuth session first (for web)
+  const session = await getServerSession(authOptions)
+  let userId: string | null = session?.user?.id || null
+
+  // If no NextAuth session, try mobile token
+  if (!userId) {
+    const authHeader = request.headers.get("authorization")
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7)
+
+      try {
+        const decoded = jsonwebtoken.verify(token, process.env.NEXTAUTH_SECRET!) as any
+        userId = decoded.userId
+        console.log("Mobile auth successful for DELETE:", decoded.email)
+      } catch (error) {
+        console.error("Mobile token verification failed:", error)
+        return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+      }
+    }
+  }
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  try {
+    const { movieId, mediaType = "movie" } = await request.json()
+
+    // Validate mediaType
+    if (!["movie", "tv"].includes(mediaType)) {
+      return NextResponse.json({ error: "Invalid media type" }, { status: 400 })
+    }
+
+    console.log(`Attempting to delete ${mediaType} ${movieId} from watchlist for user ${userId}`)
+
+    // Find and delete the watchlist item
+    const deletedItem = await prisma.watchlistItem.delete({
+      where: {
+        userId_movieId_mediaType: {
+          userId: userId,
+          movieId: movieId,
+          mediaType: mediaType,
+        },
+      },
+    })
+
+    console.log("Watchlist item deleted:", deletedItem)
+    return NextResponse.json({ message: "Item removed from watchlist", deletedItem })
+  } catch (error) {
+    console.error("Error removing from watchlist:", error)
+
+    // Check if it's a "record not found" error
+    if (error) {
+      return NextResponse.json({ error: "Item not found in watchlist" }, { status: 404 })
+    }
+
+    return NextResponse.json({ error: "Failed to remove from watchlist" }, { status: 500 })
+  }
+}
