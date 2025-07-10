@@ -22,7 +22,7 @@ export async function POST(request: Request) {
                 timestamp: Date.now(),
             },
             process.env.NEXTAUTH_SECRET!,
-            { expiresIn: "5m" },
+            { expiresIn: "30m" },
         )
 
         console.log("Created mobile token for user:", session.user.email)
