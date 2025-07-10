@@ -13,8 +13,6 @@ export const authOptions: NextAuthOptions = {
             authorization: {
                 params: {
                     scope: "openid email profile",
-                    // allow my app's redirect URI
-                    redirect_uri: "cinetaste://auth-callback"
                 }
             }
         }),
