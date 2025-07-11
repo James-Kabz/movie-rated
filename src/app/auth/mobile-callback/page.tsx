@@ -30,17 +30,10 @@ function MobileCallbackContent() {
                     if (tokenResponse.ok) {
                         const { token: authToken } = await tokenResponse.json()
                         setToken(authToken)
-                        console.log("Token generated for manual entry. Attempting deep link...")
-
-                        // Attempt to open the deep link with the token
-                        const deepLinkUrl = `cinetaste://auth-callback?token=${authToken}&success=true`
-                        window.location.href = deepLinkUrl
-
-                        // Set a timeout to show manual instructions if the deep link doesn't work
-                        // This gives the app a chance to open and potentially close the browser tab
-                        setTimeout(() => {
-                            setLoading(false) // Show the page content (manual token/QR)
-                        }, 2500) // Give 2.5 seconds for the deep link to activate
+                        console.log("Token generated for manual entry.")
+                        // Removed window.location.href = deepLinkUrl;
+                        // The deep link is now handled by WebBrowser.openAuthSessionAsync in the mobile app.
+                        // This page simply displays the token for manual fallback.
                     } else {
                         throw new Error("Failed to create mobile token")
                     }
@@ -50,7 +43,8 @@ function MobileCallbackContent() {
             } catch (error: any) {
                 console.error("Mobile callback error:", error)
                 setError(error.message || "Authentication failed")
-                setLoading(false) // Ensure loading state is false on error
+            } finally {
+                setLoading(false)
             }
         }
 
