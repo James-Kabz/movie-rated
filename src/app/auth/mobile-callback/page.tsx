@@ -30,7 +30,17 @@ function MobileCallbackContent() {
                     if (tokenResponse.ok) {
                         const { token: authToken } = await tokenResponse.json()
                         setToken(authToken)
-                        console.log("Token generated for manual entry")
+                        console.log("Token generated for manual entry. Attempting deep link...")
+
+                        // Attempt to open the deep link with the token
+                        const deepLinkUrl = `cinetaste://auth-callback?token=${authToken}&success=true`
+                        window.location.href = deepLinkUrl
+
+                        // Set a timeout to show manual instructions if the deep link doesn't work
+                        // This gives the app a chance to open and potentially close the browser tab
+                        setTimeout(() => {
+                            setLoading(false) // Show the page content (manual token/QR)
+                        }, 2500) // Give 2.5 seconds for the deep link to activate
                     } else {
                         throw new Error("Failed to create mobile token")
                     }
@@ -40,8 +50,7 @@ function MobileCallbackContent() {
             } catch (error: any) {
                 console.error("Mobile callback error:", error)
                 setError(error.message || "Authentication failed")
-            } finally {
-                setLoading(false)
+                setLoading(false) // Ensure loading state is false on error
             }
         }
 
@@ -93,7 +102,6 @@ function MobileCallbackContent() {
                     </div>
                     <h1 className="text-xl font-semibold text-red-600 mb-2">Authentication Failed</h1>
                     <p className="text-gray-600 mb-4">{error}</p>
-                    {/* Removed window.close() button as it's unreliable */}
                     <p className="text-sm text-gray-600 mt-4">Please close this browser window manually.</p>
                 </div>
             </div>
@@ -168,7 +176,6 @@ function MobileCallbackContent() {
                     </ol>
                 </div>
 
-                {/* Removed window.close() button */}
                 <p className="text-sm text-gray-600 text-center mt-4">
                     For security, please close this browser window manually after copying the token.
                 </p>
