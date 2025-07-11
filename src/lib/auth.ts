@@ -11,7 +11,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          // scope: "openid email profile",
+          scope: "openid email profile",
           prompt: "select_account",
         },
       },
@@ -21,14 +21,20 @@ export const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }) {
       console.log("Redirect callback:", { url, baseUrl })
 
-      // Always redirect mobile auth to the mobile callback page
-      if (url.includes("mobile-callback") || url.includes("auth-callback")) {
+      // Only redirect to mobile callback if explicitly requested
+      if (url === `${baseUrl}/auth/mobile-callback`) {
         return `${baseUrl}/auth/mobile-callback`
       }
 
-      // For any callback URL, redirect to mobile callback for mobile users
-      if (url.includes("callbackUrl") && url.includes("mobile-callback")) {
-        return `${baseUrl}/auth/mobile-callback`
+      // Check if the callback URL parameter contains mobile-callback
+      try {
+        const urlObj = new URL(url)
+        const callbackUrl = urlObj.searchParams.get("callbackUrl")
+        if (callbackUrl && callbackUrl.includes("mobile-callback")) {
+          return `${baseUrl}/auth/mobile-callback`
+        }
+      } catch (error) {
+        console.error("Error parsing URL:", error)
       }
 
       // Allow relative callback URLs
@@ -45,6 +51,7 @@ export const authOptions: NextAuthOptions = {
         console.error("Error parsing URL:", error)
       }
 
+      // Default fallback
       return baseUrl
     },
 
