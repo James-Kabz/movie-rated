@@ -136,12 +136,8 @@ function MobileCallbackContent() {
                             alt="Authentication QR Code"
                             className="w-48 h-48 mx-auto"
                             onError={(e) => {
-                                const target = e.target as HTMLElement
-                                target.style.display = "none"
-                                const nextSibling = target.nextSibling as HTMLElement | null
-                                if (nextSibling) {
-                                    nextSibling.style.display = "block"
-                                }
+                                // (e.target as HTMLImageElement).style.display = "none"
+                                //     (e.target.nextSibling as HTMLElement).style.display = "block"
                             }}
                         />
                         <div style={{ display: "none" }} className="w-48 h-48 bg-gray-200 flex items-center justify-center">
