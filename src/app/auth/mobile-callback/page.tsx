@@ -31,22 +31,15 @@ function MobileCallbackContent() {
                         const { token: authToken } = await tokenResponse.json()
                         setToken(authToken)
 
-                        // Try deep link first (but don't rely on it)
-                        const mobileUrl = `cinetaste://auth-callback?success=true&token=${encodeURIComponent(authToken)}`
-                        console.log("Attempting deep link:", mobileUrl)
-
-                        try {
-                            window.location.href = mobileUrl
-                        } catch (e) {
-                            console.log("Deep link failed, showing manual options")
-                        }
+                        // Remove automatic deep link attempt - just show the manual options
+                        console.log("Token generated, showing manual options")
                     } else {
                         throw new Error("Failed to create mobile token")
                     }
                 } else {
                     throw new Error("No session found")
                 }
-            } catch (error: Error | any) {
+            } catch (error: any) {
                 console.error("Mobile callback error:", error)
                 setError(error.message || "Authentication failed")
             } finally {
@@ -137,8 +130,12 @@ function MobileCallbackContent() {
                             alt="Authentication QR Code"
                             className="w-48 h-48 mx-auto"
                             onError={(e) => {
-                                // (e.target as HTMLImageElement).style.display = "none"
-                                //     (e.target.nextSibling as HTMLElement).style.display = "block"
+                                const target = e.target as HTMLElement
+                                target.style.display = "none"
+                                const nextSibling = target.nextSibling as HTMLElement | null
+                                if (nextSibling) {
+                                    nextSibling.style.display = "block"
+                                }
                             }}
                         />
                         <div style={{ display: "none" }} className="w-48 h-48 bg-gray-200 flex items-center justify-center">
@@ -160,9 +157,7 @@ function MobileCallbackContent() {
                         />
                         <button
                             onClick={copyToClipboard}
-                            className={`px-4 py-2 rounded-r-lg border border-l-0 border-gray-300 transition-colors ${copied
-                                ? "bg-green-500 text-white"
-                                : "bg-blue-500 hover:bg-blue-600 text-white"
+                            className={`px-4 py-2 rounded-r-lg border border-l-0 border-gray-300 transition-colors ${copied ? "bg-green-500 text-white" : "bg-blue-500 hover:bg-blue-600 text-white"
                                 }`}
                         >
                             {copied ? "Copied!" : "Copy"}
