@@ -93,12 +93,8 @@ function MobileCallbackContent() {
                     </div>
                     <h1 className="text-xl font-semibold text-red-600 mb-2">Authentication Failed</h1>
                     <p className="text-gray-600 mb-4">{error}</p>
-                    <button
-                        onClick={() => window.close()}
-                        className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors"
-                    >
-                        Close Window
-                    </button>
+                    {/* Removed window.close() button as it's unreliable */}
+                    <p className="text-sm text-gray-600 mt-4">Please close this browser window manually.</p>
                 </div>
             </div>
         )
@@ -168,15 +164,14 @@ function MobileCallbackContent() {
                         <li>2. Go to the login screen</li>
                         <li>3. Tap "Enter Token Manually"</li>
                         <li>4. Paste the token above</li>
+                        <li>5. **Manually close this browser window/tab.**</li>
                     </ol>
                 </div>
 
-                <button
-                    onClick={() => window.close()}
-                    className="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors"
-                >
-                    Close Window
-                </button>
+                {/* Removed window.close() button */}
+                <p className="text-sm text-gray-600 text-center mt-4">
+                    For security, please close this browser window manually after copying the token.
+                </p>
             </div>
         </div>
     )
