@@ -14,7 +14,7 @@ function MobileCallbackContent() {
     useEffect(() => {
         const handleMobileRedirect = async () => {
             try {
-                // Get the session token or create one
+                // Get the current session
                 const response = await fetch("/api/auth/session")
                 const session = await response.json()
 
@@ -30,38 +30,16 @@ function MobileCallbackContent() {
                     if (tokenResponse.ok) {
                         const { token: authToken } = await tokenResponse.json()
                         setToken(authToken)
-
-                        // Try to communicate with WebView if we're in one
-                        if (typeof window !== "undefined" && (window as any).ReactNativeWebView) {
-                            console.log("Sending token to React Native WebView")
-                                ; (window as any).ReactNativeWebView.postMessage(
-                                    JSON.stringify({
-                                        type: "AUTH_SUCCESS",
-                                        token: authToken,
-                                    }),
-                                )
-                        }
-
-                        console.log("Token generated, showing manual options")
+                        console.log("Token generated for manual entry")
                     } else {
                         throw new Error("Failed to create mobile token")
                     }
                 } else {
-                    throw new Error("No session found")
+                    throw new Error("No session found - please complete sign in first")
                 }
             } catch (error: any) {
                 console.error("Mobile callback error:", error)
                 setError(error.message || "Authentication failed")
-
-                // Send error to WebView if available
-                if (typeof window !== "undefined" && (window as any).ReactNativeWebView) {
-                    ; (window as any).ReactNativeWebView.postMessage(
-                        JSON.stringify({
-                            type: "AUTH_ERROR",
-                            error: error.message || "Authentication failed",
-                        }),
-                    )
-                }
             } finally {
                 setLoading(false)
             }

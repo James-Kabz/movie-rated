@@ -12,7 +12,7 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: "openid email profile",
-          prompt: "select_account", // Added to allow account switching
+          prompt: "select_account",
         },
       },
     }),
@@ -21,14 +21,13 @@ export const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }) {
       console.log("Redirect callback:", { url, baseUrl })
 
-      // Check if this is a mobile callback request
+      // Always redirect mobile auth to the mobile callback page
       if (url.includes("mobile-callback") || url.includes("auth-callback")) {
         return `${baseUrl}/auth/mobile-callback`
       }
 
-      // Handle custom scheme URLs (deep links) by redirecting to mobile callback
-      if (url.startsWith("cinetaste://")) {
-        console.log("Custom scheme detected, redirecting to mobile callback")
+      // For any callback URL, redirect to mobile callback for mobile users
+      if (url.includes("callbackUrl") && url.includes("mobile-callback")) {
         return `${baseUrl}/auth/mobile-callback`
       }
 
@@ -68,7 +67,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/api/auth/signin",
-    error: "/auth/error", // Added to help with account switching
+    error: "/auth/error",
   },
   debug: process.env.NODE_ENV === "development",
 }
