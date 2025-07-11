@@ -12,7 +12,7 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: "openid email profile",
-          prompt: "select_account",
+          prompt: "select_account", // Added to allow account switching
         },
       },
     }),
@@ -21,20 +21,15 @@ export const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }) {
       console.log("Redirect callback:", { url, baseUrl })
 
-      // Only redirect to mobile callback if explicitly requested
-      if (url === `${baseUrl}/auth/mobile-callback`) {
+      // Check if this is a mobile callback request
+      if (url.includes("mobile-callback") || url.includes("auth-callxqback")) {
         return `${baseUrl}/auth/mobile-callback`
       }
 
-      // Check if the callback URL parameter contains mobile-callback
-      try {
-        const urlObj = new URL(url)
-        const callbackUrl = urlObj.searchParams.get("callbackUrl")
-        if (callbackUrl && callbackUrl.includes("mobile-callback")) {
-          return `${baseUrl}/auth/mobile-callback`
-        }
-      } catch (error) {
-        console.error("Error parsing URL:", error)
+      // Handle custom scheme URLs (deep links) by redirecting to mobile callback
+      if (url.startsWith("cinetaste://")) {
+        console.log("Custom scheme detected, redirecting to mobile callback")
+        return `${baseUrl}/auth/mobile-callback`
       }
 
       // Allow relative callback URLs
@@ -51,7 +46,6 @@ export const authOptions: NextAuthOptions = {
         console.error("Error parsing URL:", error)
       }
 
-      // Default fallback
       return baseUrl
     },
 
@@ -74,7 +68,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/api/auth/signin",
-    error: "/auth/error",
+    error: "/auth/error", // Added to help with account switching
   },
   debug: process.env.NODE_ENV === "development",
 }
