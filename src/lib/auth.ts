@@ -12,6 +12,7 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: "openid email profile",
+          prompt: "select_account", // Added to allow account switching
         },
       },
     }),
@@ -64,6 +65,10 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+  },
+  pages: {
+    signIn: "/api/auth/signin",
+    error: "/auth/error", // Added to help with account switching
   },
   debug: process.env.NODE_ENV === "development",
 }

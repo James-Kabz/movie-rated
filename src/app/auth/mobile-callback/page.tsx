@@ -1,7 +1,8 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { Suspense, useEffect, useState } from "react"
+import { Suspense } from "react"
 
 function MobileCallbackContent() {
     const searchParams = useSearchParams()
@@ -24,14 +25,23 @@ function MobileCallbackContent() {
                         headers: {
                             "Content-Type": "application/json",
                         },
-                        body: JSON.stringify({ session }),
                     })
 
                     if (tokenResponse.ok) {
                         const { token: authToken } = await tokenResponse.json()
                         setToken(authToken)
 
-                        // Remove automatic deep link attempt - just show the manual options
+                        // Try to communicate with WebView if we're in one
+                        if (typeof window !== "undefined" && (window as any).ReactNativeWebView) {
+                            console.log("Sending token to React Native WebView")
+                                ; (window as any).ReactNativeWebView.postMessage(
+                                    JSON.stringify({
+                                        type: "AUTH_SUCCESS",
+                                        token: authToken,
+                                    }),
+                                )
+                        }
+
                         console.log("Token generated, showing manual options")
                     } else {
                         throw new Error("Failed to create mobile token")
@@ -42,13 +52,23 @@ function MobileCallbackContent() {
             } catch (error: any) {
                 console.error("Mobile callback error:", error)
                 setError(error.message || "Authentication failed")
+
+                // Send error to WebView if available
+                if (typeof window !== "undefined" && (window as any).ReactNativeWebView) {
+                    ; (window as any).ReactNativeWebView.postMessage(
+                        JSON.stringify({
+                            type: "AUTH_ERROR",
+                            error: error.message || "Authentication failed",
+                        }),
+                    )
+                }
             } finally {
                 setLoading(false)
             }
         }
 
         handleMobileRedirect()
-    }, [searchParams])
+    }, [])
 
     const copyToClipboard = async () => {
         try {
@@ -69,7 +89,6 @@ function MobileCallbackContent() {
     }
 
     const generateQRCode = (text: string) => {
-        // Using QR Server API for simplicity
         return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`
     }
 
@@ -130,12 +149,10 @@ function MobileCallbackContent() {
                             alt="Authentication QR Code"
                             className="w-48 h-48 mx-auto"
                             onError={(e) => {
-                                const target = e.target as HTMLElement
+                                const target = e.target as HTMLImageElement
                                 target.style.display = "none"
-                                const nextSibling = target.nextSibling as HTMLElement | null
-                                if (nextSibling) {
-                                    nextSibling.style.display = "block"
-                                }
+                                const nextSibling = target.nextElementSibling as HTMLElement
+                                if (nextSibling) nextSibling.style.display = "block"
                             }}
                         />
                         <div style={{ display: "none" }} className="w-48 h-48 bg-gray-200 flex items-center justify-center">
@@ -171,8 +188,8 @@ function MobileCallbackContent() {
                     <ol className="text-sm text-blue-800 space-y-1">
                         <li>1. Open your Cinetaste mobile app</li>
                         <li>2. Go to the login screen</li>
-                        <li>3. Tap "Enter Token Manually" or scan the QR code</li>
-                        <li>4. Paste the token or scan the code above</li>
+                        <li>3. Tap "Enter Token Manually"</li>
+                        <li>4. Paste the token above</li>
                     </ol>
                 </div>
 
