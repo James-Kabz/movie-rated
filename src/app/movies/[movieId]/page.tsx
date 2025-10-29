@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
-import { StarIcon, CalendarIcon, ClockIcon } from "@heroicons/react/24/solid"
+import { StarIcon, CalendarIcon, ClockIcon, ArrowPathIcon } from "@heroicons/react/24/solid"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { Button, Chip, Skeleton, Card, CardBody } from "@heroui/react"
@@ -28,6 +28,7 @@ export default function MovieDetailPage() {
     const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [addingToWatchlist, setAddingToWatchlist] = useState(false)
 
     useEffect(() => {
         if (movieId) {
@@ -113,6 +114,7 @@ export default function MovieDetailPage() {
     }
 
     const handleAddToWatchlist = async (movieId: number, sendEmail: boolean) => {
+        setAddingToWatchlist(true)
         try {
             const response = await fetch("/api/watchlist", {
                 method: "POST",
@@ -132,6 +134,8 @@ export default function MovieDetailPage() {
             toast.error("Error adding to watchlist", {
                 description: error instanceof Error ? error.message : "Failed to add movie to watchlist.",
             })
+        } finally {
+            setAddingToWatchlist(false)
         }
     }
 
@@ -321,10 +325,20 @@ export default function MovieDetailPage() {
                                         color={isInWatchlist(movie.id, "movie") ? "success" : "secondary"}
                                         variant={isInWatchlist(movie.id, "movie") ? "flat" : "solid"}
                                         onPress={() => handleAddToWatchlist(movie.id, false)}
-                                        disabled={isInWatchlist(movie.id, "movie")}
+                                        disabled={isInWatchlist(movie.id, "movie") || addingToWatchlist}
+                                        isLoading={addingToWatchlist}
                                         size="lg"
                                     >
-                                        {isInWatchlist(movie.id, "movie") ? "✓ In Watchlist" : "Add to Watchlist"}
+                                        {addingToWatchlist ? (
+                                            <>
+                                                <ArrowPathIcon className="h-5 w-5 animate-spin mr-2" />
+                                                Adding...
+                                            </>
+                                        ) : isInWatchlist(movie.id, "movie") ? (
+                                            "✓ In Watchlist"
+                                        ) : (
+                                            "Add to Watchlist"
+                                        )}
                                     </Button>
                                 </div>
                             )}

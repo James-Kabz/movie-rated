@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { TrashIcon, CheckIcon, FilmIcon, TvIcon, ClockIcon } from "@heroicons/react/24/outline"
+import { TrashIcon, CheckIcon, FilmIcon, TvIcon, ClockIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import { Button, Tabs, Tab } from "@heroui/react"
 import { toast } from "sonner"
 
@@ -43,6 +43,9 @@ export default function WatchlistPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "unwatched" | "watched">("all")
   const [activeTab, setActiveTab] = useState<"watchlist" | "recently-viewed">("watchlist")
+  const [removingItems, setRemovingItems] = useState<Set<string>>(new Set())
+  const [togglingItems, setTogglingItems] = useState<Set<string>>(new Set())
+  const [clearingAll, setClearingAll] = useState(false)
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -82,6 +85,7 @@ export default function WatchlistPage() {
   }
 
   const handleRemoveFromWatchlist = async (itemId: string) => {
+    setRemovingItems(prev => new Set(prev).add(itemId))
     try {
       const response = await fetch(`/api/watchlist/${itemId}`, {
         method: "DELETE",
@@ -96,10 +100,17 @@ export default function WatchlistPage() {
       toast.error("Error removing from watchlist", {
         description: error instanceof Error ? error.message : "Failed to remove from watchlist.",
       })
+    } finally {
+      setRemovingItems(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(itemId)
+        return newSet
+      })
     }
   }
 
   const handleToggleWatched = async (itemId: string, watched: boolean) => {
+    setTogglingItems(prev => new Set(prev).add(itemId))
     try {
       const response = await fetch(`/api/watchlist/${itemId}`, {
         method: "PUT",
@@ -117,6 +128,12 @@ export default function WatchlistPage() {
       toast.error("Error updating watchlist item", {
         description: error instanceof Error ? error.message : "Failed to update watchlist item.",
       })
+    } finally {
+      setTogglingItems(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(itemId)
+        return newSet
+      })
     }
   }
 
@@ -125,6 +142,7 @@ export default function WatchlistPage() {
       return
     }
 
+    setClearingAll(true)
     try {
       const deletePromises = watchlist.map((item) => fetch(`/api/watchlist/${item.id}`, { method: "DELETE" }))
 
@@ -136,6 +154,8 @@ export default function WatchlistPage() {
       toast.error("Error clearing watchlist", {
         description: "Failed to clear watchlist.",
       })
+    } finally {
+      setClearingAll(false)
     }
   }
 
@@ -278,9 +298,8 @@ export default function WatchlistPage() {
                     <button
                       key={tab.key}
                       onClick={() => setFilter(tab.key as any)}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        filter === tab.key ? "bg-white text-indigo-600 shadow-sm" : "text-gray-600 hover:text-gray-900"
-                      }`}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === tab.key ? "bg-white text-indigo-600 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                        }`}
                     >
                       {tab.label}
                     </button>
@@ -292,9 +311,10 @@ export default function WatchlistPage() {
                   variant="bordered"
                   size="sm"
                   onClick={handleClearAllWatchlist}
-                  disabled={watchlist.length === 0}
+                  disabled={watchlist.length === 0 || clearingAll}
+                  isLoading={clearingAll}
                 >
-                  Clear All
+                  {clearingAll ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : "Clear All"}
                 </Button>
               </div>
 
@@ -320,9 +340,8 @@ export default function WatchlistPage() {
                   {filteredWatchlist.map((item) => (
                     <div
                       key={item.id}
-                      className={`movie-card rounded-lg shadow-md p-6 flex items-center space-x-4 ${
-                        item.watched ? "opacity-40" : ""
-                      }`}
+                      className={`movie-card rounded-lg shadow-md p-6 flex items-center space-x-4 ${item.watched ? "opacity-40" : ""
+                        }`}
                     >
                       <Link href={getDetailUrl(item)}>
                         <Image
@@ -367,22 +386,31 @@ export default function WatchlistPage() {
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleToggleWatched(item.id, !item.watched)}
-                          className={`p-2 rounded-full transition-colors ${
-                            item.watched
+                          disabled={togglingItems.has(item.id)}
+                          className={`p-2 rounded-full transition-colors ${item.watched
                               ? "bg-green-100 text-green-600 hover:bg-green-200"
                               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                          }`}
+                            } ${togglingItems.has(item.id) ? "opacity-50 cursor-not-allowed" : ""}`}
                           title={item.watched ? "Mark as unwatched" : "Mark as watched"}
                         >
-                          <CheckIcon className="h-5 w-5" />
+                          {togglingItems.has(item.id) ? (
+                            <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <CheckIcon className="h-5 w-5" />
+                          )}
                         </button>
 
                         <button
                           onClick={() => handleRemoveFromWatchlist(item.id)}
-                          className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                          disabled={removingItems.has(item.id)}
+                          className={`p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors ${removingItems.has(item.id) ? "opacity-50 cursor-not-allowed" : ""}`}
                           title="Remove from watchlist"
                         >
-                          <TrashIcon className="h-5 w-5" />
+                          {removingItems.has(item.id) ? (
+                            <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <TrashIcon className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
                     </div>

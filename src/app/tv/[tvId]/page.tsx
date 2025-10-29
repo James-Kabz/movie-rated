@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
-import { StarIcon, CalendarIcon, TvIcon } from "@heroicons/react/24/solid"
+import { StarIcon, CalendarIcon, TvIcon, ArrowPathIcon } from "@heroicons/react/24/solid"
 import { useSession } from "next-auth/react"
 import { Button, Chip, Skeleton, Card, CardBody } from "@heroui/react"
 import { MovieCard } from "@/components/movie-card"
@@ -22,6 +22,7 @@ export default function TVShowDetailPage() {
   const [watchlist, setWatchlist] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [addingToWatchlist, setAddingToWatchlist] = useState(false)
 
   useEffect(() => {
     if (tvId) {
@@ -85,6 +86,7 @@ export default function TVShowDetailPage() {
   }
 
   const handleAddToWatchlist = async (tvId: number, sendEmail: boolean) => {
+    setAddingToWatchlist(true)
     try {
       const response = await fetch("/api/watchlist", {
         method: "POST",
@@ -109,6 +111,8 @@ export default function TVShowDetailPage() {
       toast.error("Error adding to watchlist", {
         description: error instanceof Error ? error.message : "Failed to add TV show to watchlist.",
       })
+    } finally {
+      setAddingToWatchlist(false)
     }
   }
 
@@ -249,10 +253,20 @@ export default function TVShowDetailPage() {
                     color={watchlist.includes(tv.id) ? "success" : "secondary"}
                     variant={watchlist.includes(tv.id) ? "flat" : "solid"}
                     onPress={() => handleAddToWatchlist(tv.id, false)}
-                    disabled={watchlist.includes(tv.id)}
+                    disabled={watchlist.includes(tv.id) || addingToWatchlist}
+                    isLoading={addingToWatchlist}
                     size="lg"
                   >
-                    {watchlist.includes(tv.id) ? "✓ In Watchlist" : "Add to Watchlist"}
+                    {addingToWatchlist ? (
+                      <>
+                        <ArrowPathIcon className="h-5 w-5 animate-spin mr-2" />
+                        Adding...
+                      </>
+                    ) : watchlist.includes(tv.id) ? (
+                      "✓ In Watchlist"
+                    ) : (
+                      "Add to Watchlist"
+                    )}
                   </Button>
                 </div>
               )}
